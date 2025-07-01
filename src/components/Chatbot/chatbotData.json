@@ -1,0 +1,88 @@
+[
+    {
+        "question": "What are your opening hours?",
+        "answer": {
+            "website": "Our website support is available Monday to Saturday, 9:00 AM to 7:00 PM IST.",
+            "office": "Our physical office operates Monday to Friday, 10:00 AM to 6:00 PM IST."
+        }
+    },
+    {
+        "question": "How can I contact you?",
+        "answer": {
+            "website": "For online queries, email us at support@yourlogisticsai.com or call +91-98XXXXXX98.",
+            "office": "For in-office queries, email info@yourlogisticsai.in or call +91-89XXXXXX89."
+        }
+    },
+    {
+        "question": "Where is your office located?",
+        "answer": "We’re located at 3rd Floor, Sector 62, Noida, Uttar Pradesh, India."
+    },
+    {
+        "question": "Who manages the operations?",
+        "answer": "Online operations are managed by Ms. Riya Malhotra. Physical site operations are handled by Mr. Arjun Mehra."
+    },
+    {
+        "question": "Do you offer real-time inventory tracking?",
+        "answer": "Yes, our AI dashboard provides real-time stock monitoring and demand forecasting."
+    },
+    {
+        "question": "What is your return or cancellation policy?",
+        "answer": "Returns and cancellations are accepted within 24 hours of order placement. Conditions apply."
+    },
+    {
+        "question": "Do you offer support outside business hours?",
+        "answer": "Currently, we do not provide support outside working hours. Please email us and we’ll get back on the next business day."
+    },
+    {
+        "question": "How is customer data protected?",
+        "answer": "We comply with GDPR and Indian data protection laws. Your data is encrypted and stored securely."
+    },
+    {
+        "question": "Do you provide training for using your dashboard?",
+        "answer": "Yes. We offer onboarding documents and can arrange a live demo session on request."
+    },
+    {
+        "question": "How can I track delivery routes?",
+        "answer": "Our AI system includes smart route tracking, viewable from your dashboard."
+    },
+    {
+        "question": "Can I access reports or analytics?",
+        "answer": "Yes, detailed analytics and downloadable reports are available in the dashboard under the ‘Reports’ section."
+    },
+    {
+        "question": "How do I report a bug or technical issue?",
+        "answer": "Please email feedback@yourlogisticsai.com with a detailed description. Use the subject line 'Bug Report'."
+    },
+    {
+        "question": "How can I suggest a new feature?",
+        "answer": "We welcome feedback! Send your suggestions to feedback@yourlogisticsai.com with 'Feature Suggestion' as the subject."
+    },
+    {
+        "question": "Is the dashboard mobile friendly?",
+        "answer": "Yes, our dashboard is fully responsive and accessible on mobile devices."
+    },
+    {
+        "question": "Can I integrate your system with existing ERP or CRM software?",
+        "answer": "Yes, our backend supports API-based integration with most major ERP and CRM platforms."
+    },
+    {
+        "question": "Is predictive maintenance supported for delivery vehicles?",
+        "answer": "Yes, our system uses IoT and AI to monitor vehicle health and alert for preventive maintenance."
+    },
+    {
+        "question": "Are there separate contacts for business inquiries?",
+        "answer": "Yes. For business partnerships, email biz@yourlogisticsai.com or call our corporate line at +91-90XXXXXX90."
+    },
+    {
+        "question": "How often is demand prediction data updated?",
+        "answer": "Demand predictions are updated hourly based on real-time inputs and ML forecasting models."
+    },
+    {
+        "question": "Do you support multi-warehouse management?",
+        "answer": "Yes, our platform is built to handle inventory across multiple warehouse locations with independent tracking."
+    },
+    {
+        "question": "What AI models do you use for prediction?",
+        "answer": "We use XGBoost, LSTM, and Transformer-based models for forecasting demand, optimizing routes, and detecting anomalies."
+    }
+]
