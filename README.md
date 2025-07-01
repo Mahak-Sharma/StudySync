@@ -52,5 +52,9 @@ Pull requests are welcome! For major changes, please open an issue first to disc
 4. Push to the branch (`git push origin feature/YourFeature`)
 5. Open a Pull Request
 
-## 📄 License
-[MIT](LICENSE)
+## 📬 Contact
+For questions or contributions, contact:
+- **Aakansha Rawat** - [GitHub](https://github.com/aakansharawat) | [Email](mailto:aakansharawat1234@gmail.com)
+- **Abhishek Mamgain** - [GitHub](https://github.com/AbhishekMamgain7) | [Email](mailto:abhishekmamgain799@gmail.com)
+- **Aaradhya Chachra** - [GitHub](https://github.com/Aaradhya2005) | [Email](mailto:aaradhyachachra779@gmail.com)
+- **Mahak Sharma** - [GitHub](https://github.com/Mahak-Sharma) | [Email](mailto:mahaksharma0227@gmail.com)
