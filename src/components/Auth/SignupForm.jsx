@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../../api/firebaseConfig';
 import { useNavigate, NavLink } from 'react-router-dom';
-import { FaUser, FaEnvelope, FaLock } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaLock, FaUserPlus } from 'react-icons/fa';
 
 const SignupForm = () => {
   const [name, setName] = useState('');
@@ -27,7 +27,7 @@ const SignupForm = () => {
   return (
     <div className="signup-form-container">
       <div className="signup-form-logo">
-        <img src="/vite.svg" alt="logo" />
+        <FaUserPlus size={48} color="#1976d2" style={{ marginBottom: 8 }} />
       </div>
       <h2 className="signup-form-title">Create your StudySync account</h2>
       <form className="signup-form-fields" onSubmit={handleSubmit}>
