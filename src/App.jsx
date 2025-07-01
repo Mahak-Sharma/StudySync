@@ -2,6 +2,7 @@ import React from "react";
 import { NavLink } from 'react-router-dom';
 import { FaUsers, FaComments, FaPoll, FaQuestionCircle, FaFileAlt, FaTrophy } from 'react-icons/fa';
 import './App.css';
+import Chatbot from "./components/Chatbot/Chatbot";
 
 const features = [
   {
@@ -76,6 +77,7 @@ function App() {
           </div>
         </div>
       </section>
+      <Chatbot />
     </div>
   );
 }
