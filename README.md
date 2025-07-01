@@ -1,6 +1,6 @@
 # StudySync
 
-A modern, collaborative group study platform built with React and Vite.
+A modern, collaborative group study platform built with React and Python.
 
 ## ✨ Features
 - **Create & Join Groups:** Study together with friends in private or public groups.
@@ -22,7 +22,7 @@ A modern, collaborative group study platform built with React and Vite.
 
 1. **Clone the repository:**
    ```sh
-   git clone https://github.com/yourusername/studysync.git
+   git clone https://github.com/Mahak-Sharma/studysync.git
    cd studysync
    ```
 2. **Install dependencies:**
