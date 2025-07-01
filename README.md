@@ -1,12 +1,56 @@
-# React + Vite
+# StudySync
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, collaborative group study platform built with React and Vite.
 
-Currently, two official plugins are available:
+## ✨ Features
+- **Create & Join Groups:** Study together with friends in private or public groups.
+- **Real-time Chat:** Discuss topics, share ideas, and stay connected.
+- **Live Polls:** Engage your group with instant polls and voting.
+- **Quizzes:** Test your knowledge with group quizzes and challenges.
+- **File Sharing:** Upload and share study materials and notes.
+- **Leaderboard:** Track your progress and compete with friends.
+- **Todo Board:** Organize study tasks and assignments.
+- **AI Chatbot:** Get instant study help and summaries.
+- **Modern UI:** Beautiful, responsive design with vibrant gradients and the Poppins font.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🛠️ Tech Stack
+- **Frontend:** React (with Vite)
+- **Styling:** Traditional CSS (no frameworks), Google Fonts (Poppins), Responsive Design
+- **Icons:** react-icons
 
-## Expanding the ESLint configuration
+## 🚀 Getting Started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. **Clone the repository:**
+   ```sh
+   git clone https://github.com/yourusername/studysync.git
+   cd studysync
+   ```
+2. **Install dependencies:**
+   ```sh
+   npm install
+   ```
+3. **Start the development server:**
+   ```sh
+   npm run dev
+   ```
+4. **Open in your browser:**
+   Visit [http://localhost:5173](http://localhost:5173)
+
+## 📁 Project Structure
+- `src/components/` — All UI components (Auth, Chat, Groups, Files, Todo, Chatbot, etc.)
+- `src/pages/` — Main pages (Dashboard, GroupPage, Profile)
+- `src/assets/` — Static assets (images, icons)
+- `src/contexts/` — React context providers (Auth, Socket)
+- `src/api/` — API utilities
+
+## 🤝 Contributing
+Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
+
+1. Fork the repo
+2. Create your feature branch (`git checkout -b feature/YourFeature`)
+3. Commit your changes (`git commit -am 'Add new feature'`)
+4. Push to the branch (`git push origin feature/YourFeature`)
+5. Open a Pull Request
+
+## 📄 License
+[MIT](LICENSE)
