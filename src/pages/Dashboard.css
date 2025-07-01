@@ -1,0 +1,111 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap');
+
+.dashboard-container {
+  max-width: 900px;
+  margin: 48px auto 0 auto;
+  padding: 32px 16px 48px 16px;
+  background: linear-gradient(120deg, #f7f8fa 0%, #e3f0ff 100%);
+  border-radius: 20px;
+  box-shadow: 0 4px 32px rgba(25, 118, 210, 0.13);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeIn 1.1s;
+  font-family: 'Poppins', 'Segoe UI', 'Roboto', Arial, sans-serif;
+}
+
+.dashboard-title {
+  font-size: 2.6rem;
+  font-weight: 900;
+  color: #1976d2;
+  margin-bottom: 10px;
+  text-align: center;
+  letter-spacing: -1.5px;
+  font-family: 'Poppins', 'Segoe UI', 'Roboto', Arial, sans-serif;
+}
+.dashboard-subtitle {
+  font-size: 1.25rem;
+  color: #555;
+  margin-bottom: 36px;
+  text-align: center;
+  font-weight: 500;
+  font-family: 'Poppins', 'Segoe UI', 'Roboto', Arial, sans-serif;
+}
+.dashboard-features {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 36px;
+  margin-top: 24px;
+}
+.dashboard-feature {
+  background: linear-gradient(120deg, #e3f0ff 0%, #f7f8fa 100%);
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(25, 118, 210, 0.09);
+  padding: 36px 16px 28px 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: box-shadow 0.22s, transform 0.22s, background 0.22s;
+  animation: fadeInUp 1.1s;
+  font-family: 'Poppins', 'Segoe UI', 'Roboto', Arial, sans-serif;
+  cursor: pointer;
+}
+.dashboard-feature:hover, .dashboard-feature:focus-within {
+  box-shadow: 0 8px 32px rgba(25, 118, 210, 0.16);
+  transform: translateY(-8px) scale(1.05);
+  background: linear-gradient(120deg, #f7f8fa 0%, #e3f0ff 100%);
+}
+.dashboard-feature-icon {
+  font-size: 2.5rem;
+  margin-bottom: 18px;
+  color: #1976d2;
+  filter: drop-shadow(0 2px 8px rgba(25, 118, 210, 0.10));
+}
+.dashboard-feature-button {
+  background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 0;
+  font-size: 1.08rem;
+  font-weight: 700;
+  margin-top: 16px;
+  width: 100%;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
+  font-family: 'Poppins', 'Segoe UI', 'Roboto', Arial, sans-serif;
+  letter-spacing: 0.01em;
+}
+.dashboard-feature-button:hover, .dashboard-feature-button:focus {
+  background: #1251a3;
+  transform: scale(1.04);
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (max-width: 700px) {
+  .dashboard-container {
+    padding: 16px 2px 24px 2px;
+  }
+  .dashboard-title {
+    font-size: 1.4rem;
+  }
+  .dashboard-features {
+    gap: 16px;
+  }
+  .dashboard-feature {
+    padding: 18px 4px 12px 4px;
+  }
+}
+
+.dashboard-header {
+  /* Add your Dashboard header styles here */
+} 

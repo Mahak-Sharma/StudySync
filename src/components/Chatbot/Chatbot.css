@@ -1,0 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap');
+
+.chatbot-container {
+  max-width: 500px;
+  margin: 32px auto;
+  padding: 28px 20px;
+  background: linear-gradient(120deg, #f7f8fa 0%, #e3f0ff 100%);
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(25, 118, 210, 0.07);
+  display: flex;
+  flex-direction: column;
+  font-family: 'Poppins', 'Segoe UI', 'Roboto', Arial, sans-serif;
+}
+
+.chatbot-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #1976d2;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+  font-family: 'Poppins', 'Segoe UI', 'Roboto', Arial, sans-serif;
+}
+
+.chatbot-messages {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 18px 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.chatbot-message {
+  padding: 8px 0;
+  border-bottom: 1px solid #e3eafc;
+  color: #333;
+  font-size: 1.01rem;
+  display: flex;
+  align-items: flex-start;
+  font-family: 'Poppins', 'Segoe UI', 'Roboto', Arial, sans-serif;
+}
+
+.chatbot-message:last-child {
+  border-bottom: none;
+}
+
+.chatbot-user {
+  font-weight: 700;
+  margin-right: 8px;
+  color: #1976d2;
+  font-family: 'Poppins', 'Segoe UI', 'Roboto', Arial, sans-serif;
+}
+
+.chatbot-divider {
+  border: none;
+  border-top: 1.5px solid #e3eafc;
+  margin: 18px 0;
+}
+
+.chatbot-form {
+  display: flex;
+  gap: 8px;
+}
+
+.chatbot-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border 0.2s;
+  font-family: 'Poppins', 'Segoe UI', 'Roboto', Arial, sans-serif;
+}
+
+.chatbot-input:focus {
+  border: 1.5px solid #1976d2;
+  outline: none;
+}
+
+.chatbot-send {
+  background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  font-family: 'Poppins', 'Segoe UI', 'Roboto', Arial, sans-serif;
+}
+
+.chatbot-send:hover {
+  background: #1251a3;
+  transform: scale(1.04);
+} 
