@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { FaUsers, FaComments, FaPoll, FaQuestionCircle, FaFileAlt, FaTrophy } from 'react-icons/fa';
 import './App.css';
 import Chatbot from "./components/Chatbot/Chatbot";
+import { useAuth } from './contexts/AuthContext';
 
 const features = [
   {
@@ -40,6 +41,7 @@ const features = [
 function App() {
   // Duplicate features for seamless carousel
   const carouselFeatures = [...features, ...features];
+  const { user, loading } = useAuth();
   return (
     <div className="app-root">
       {/* Navigation Bar */}
@@ -51,7 +53,11 @@ function App() {
           </div>
           <NavLink className={({ isActive }) => "app-navbar-link" + (isActive ? " active" : "") } to="/dashboard">Dashboard</NavLink>
           <NavLink className={({ isActive }) => "app-navbar-link" + (isActive ? " active" : "") } to="/group">Group</NavLink>
-          <NavLink className={({ isActive }) => "app-navbar-link" + (isActive ? " active" : "") } to="/profile">Profile</NavLink>
+          {loading ? null : user ? (
+            <NavLink className={({ isActive }) => "app-navbar-link" + (isActive ? " active" : "") } to="/profile">Profile</NavLink>
+          ) : (
+            <NavLink className={({ isActive }) => "app-navbar-link" + (isActive ? " active" : "") } to="/login">Login</NavLink>
+          )}
         </div>
       </nav>
       {/* Hero Section */}
