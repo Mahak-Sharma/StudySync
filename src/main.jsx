@@ -8,6 +8,11 @@ import Profile from './pages/Profile';
 import SignupForm from './components/Auth/SignupForm';
 import LoginForm from './components/Auth/LoginForm';
 import { AuthProvider } from './contexts/AuthContext';
+import FileList from './components/Files/FileList';
+import ChatBox from './components/Chat/ChatBox';
+import TodoBoard from './components/Todo/TodoBoard';
+import Chatbot from './components/Chatbot/Chatbot';
+import GroupDetailPage from './pages/GroupDetailPage';
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -16,11 +21,18 @@ createRoot(document.getElementById('root')).render(
         <Routes>
           <Route path="/" element={<App />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/group/:groupId" element={<GroupDetailPage />} />
           <Route path="/group" element={<GroupPage />} />
+          <Route path="/files" element={<FileList />} />
+          <Route path="/chat" element={<ChatBox />} />
+          <Route path="/todo" element={<TodoBoard />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/signup" element={<SignupForm />} />
           <Route path="/login" element={<LoginForm />} />
         </Routes>
+        <div style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 1000 }}>
+          <Chatbot />
+        </div>
       </BrowserRouter>
     </AuthProvider>
   </React.StrictMode>

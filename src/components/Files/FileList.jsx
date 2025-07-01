@@ -1,22 +1,25 @@
 import './FileList.css';
 import { FaDownload } from 'react-icons/fa';
+import FileUpload from './FileUpload';
 
-const files = [
-  { id: 1, name: "Lecture1.pdf" },
-  { id: 2, name: "Notes.docx" },
-  { id: 3, name: "Summary.txt" },
-];
+// No preloaded files
+const files = [];
 
 const FileList = () => (
   <div className="file-list-container">
+    <FileUpload />
     <h3 className="file-list-title">Uploaded Files</h3>
     <ul className="file-list-list">
-      {files.map(file => (
-        <li className="file-list-item" key={file.id}>
-          <span>{file.name}</span>
-          <button className="file-list-download"><FaDownload /> Download</button>
-        </li>
-      ))}
+      {files.length === 0 ? (
+        <li className="file-list-item-empty">No files uploaded yet.</li>
+      ) : (
+        files.map(file => (
+          <li className="file-list-item" key={file.id}>
+            <span>{file.name}</span>
+            <button className="file-list-download"><FaDownload /> Download</button>
+          </li>
+        ))
+      )}
     </ul>
   </div>
 );

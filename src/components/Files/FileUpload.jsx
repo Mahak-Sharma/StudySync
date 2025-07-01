@@ -1,9 +1,16 @@
 import './FileUpload.css';
 import { FaDownload } from 'react-icons/fa';
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
+
+const API_URL = 'http://localhost:5000'; // Change if backend runs elsewhere
 
 const FileUpload = () => {
   const fileInputRef = useRef();
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [summary, setSummary] = useState("");
+  const [uploadedFilename, setUploadedFilename] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleUploadClick = () => {
     fileInputRef.current.click();
@@ -11,9 +18,40 @@ const FileUpload = () => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      alert(`File selected: ${file.name}`);
+    setSelectedFile(file);
+    setSummary("");
+    setUploadedFilename("");
+    setError("");
+  };
+
+  const handleGenerateSummary = async () => {
+    if (!selectedFile) return;
+    setLoading(true);
+    setSummary("");
+    setError("");
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    try {
+      const res = await fetch(`${API_URL}/summarize`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSummary(data.summary);
+        setUploadedFilename(data.filename);
+      } else {
+        setError(data.error || 'Failed to generate summary.');
+      }
+    } catch (err) {
+      setError('Server error. Please try again.');
     }
+    setLoading(false);
+  };
+
+  const handleDownload = () => {
+    if (!uploadedFilename) return;
+    window.open(`${API_URL}/download/${uploadedFilename}`, '_blank');
   };
 
   return (
@@ -32,6 +70,37 @@ const FileUpload = () => {
       >
         <FaDownload /> Select File
       </button>
+      {selectedFile && (
+        <div style={{ marginTop: 12 }}>
+          <div><b>Selected:</b> {selectedFile.name}</div>
+          <button
+            className="file-upload-button"
+            style={{ marginTop: 10 }}
+            onClick={handleGenerateSummary}
+            disabled={loading}
+          >
+            {loading ? 'Generating...' : 'Generate Summary'}
+          </button>
+        </div>
+      )}
+      {uploadedFilename && (
+        <button
+          className="file-upload-button"
+          style={{ marginTop: 10 }}
+          onClick={handleDownload}
+        >
+          <FaDownload /> Download File
+        </button>
+      )}
+      {summary && (
+        <div style={{ marginTop: 18, background: '#f7f8fa', padding: 16, borderRadius: 8, textAlign: 'left' }}>
+          <b>Summary:</b>
+          <div style={{ marginTop: 8 }}>{summary}</div>
+        </div>
+      )}
+      {error && (
+        <div style={{ color: 'red', marginTop: 10 }}>{error}</div>
+      )}
     </div>
   );
 };

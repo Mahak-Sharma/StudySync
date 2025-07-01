@@ -1,21 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import './ChatBox.css';
+import { db } from '../../api/firebaseConfig';
+import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { useAuth } from '../../contexts/AuthContext';
 
-const initialMessages = [
-  { id: 1, user: "Alice", text: "Hi everyone!" },
-  { id: 2, user: "Bob", text: "Hello Alice!" },
-];
-
-const ChatBox = () => {
-  const [messages, setMessages] = useState(initialMessages);
+const ChatBox = ({ groupId }) => {
+  const { user } = useAuth();
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const messagesEndRef = useRef(null);
 
-  const handleSend = (e) => {
+  // Fetch messages for this group
+  useEffect(() => {
+    if (!groupId) return;
+    const q = query(
+      collection(db, 'groups', groupId, 'messages'),
+      orderBy('createdAt', 'asc')
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setMessages(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+    return () => unsubscribe();
+  }, [groupId]);
+
+  // Scroll to bottom on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSend = async (e) => {
     e.preventDefault();
-    if (input.trim()) {
-      setMessages([...messages, { id: messages.length + 1, user: "You", text: input }]);
-      setInput("");
-    }
+    if (!input.trim() || !user) return;
+    await addDoc(collection(db, 'groups', groupId, 'messages'), {
+      text: input,
+      userId: user.uid,
+      userName: user.displayName || user.email,
+      createdAt: serverTimestamp(),
+    });
+    setInput("");
   };
 
   return (
@@ -23,10 +45,15 @@ const ChatBox = () => {
       <h3 className="chat-box-title">Group Chat</h3>
       <ul className="chat-box-messages">
         {messages.map(msg => (
-          <li className="chat-box-message" key={msg.id}>
-            <span className="chat-box-user"><b>{msg.user}:</b></span> <span>{msg.text}</span>
+          <li
+            className={`chat-box-message${msg.userId === user?.uid ? ' chat-box-message-right' : ' chat-box-message-left'}`}
+            key={msg.id}
+          >
+            <span className="chat-box-user"><b>{msg.userName}:</b></span>
+            <span>{msg.text}</span>
           </li>
         ))}
+        <div ref={messagesEndRef} />
       </ul>
       <hr className="chat-box-divider" />
       <form className="chat-box-form" onSubmit={handleSend}>

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../api/firebaseConfig';
 import { useNavigate } from 'react-router-dom';
-import { FaUser, FaLock } from 'react-icons/fa';
+import { FaUser, FaLock, FaSignInAlt } from 'react-icons/fa';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -30,7 +30,7 @@ const LoginForm = () => {
   return (
     <div className="login-form-container">
       <div className="login-form-logo">
-        <img src="/vite.svg" alt="logo" />
+        <FaSignInAlt size={48} color="#1976d2" style={{ marginBottom: 8 }} />
       </div>
       <h2 className="login-form-title">Sign in to StudySync</h2>
       <form className="login-form-fields" onSubmit={handleSubmit}>

@@ -1,40 +1,47 @@
 import React from "react";
-import { NavLink } from 'react-router-dom';
-import { FaUsers, FaComments, FaPoll, FaQuestionCircle, FaFileAlt, FaTrophy } from 'react-icons/fa';
-import './App.css';
+import { NavLink, useNavigate } from "react-router-dom";
+import {
+  FaUsers,
+  FaComments,
+  FaPoll,
+  FaQuestionCircle,
+  FaFileAlt,
+  FaTrophy,
+} from "react-icons/fa";
+import "./App.css";
 import Chatbot from "./components/Chatbot/Chatbot";
-import { useAuth } from './contexts/AuthContext';
+import { useAuth } from "./contexts/AuthContext";
 
 const features = [
   {
     icon: <FaUsers size={40} color="#1976d2" />,
     title: "Create & Join Groups",
-    desc: "Study together with friends in private or public groups."
+    desc: "Study together with friends in private or public groups.",
   },
   {
     icon: <FaComments size={40} color="#1976d2" />,
     title: "Real-time Chat",
-    desc: "Discuss topics, share ideas, and stay connected."
+    desc: "Discuss topics, share ideas, and stay connected.",
   },
   {
     icon: <FaPoll size={40} color="#1976d2" />,
     title: "Live Polls",
-    desc: "Engage your group with instant polls and voting."
+    desc: "Engage your group with instant polls and voting.",
   },
   {
     icon: <FaQuestionCircle size={40} color="#1976d2" />,
     title: "Quizzes",
-    desc: "Test your knowledge with group quizzes and challenges."
+    desc: "Test your knowledge with group quizzes and challenges.",
   },
   {
     icon: <FaFileAlt size={40} color="#1976d2" />,
     title: "File Sharing",
-    desc: "Upload and share study materials and notes."
+    desc: "Upload and share study materials and notes.",
   },
   {
     icon: <FaTrophy size={40} color="#1976d2" />,
     title: "Leaderboard",
-    desc: "Track your progress and compete with friends."
+    desc: "Track your progress and compete with friends.",
   },
 ];
 
@@ -42,6 +49,7 @@ function App() {
   // Duplicate features for seamless carousel
   const carouselFeatures = [...features, ...features];
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
   return (
     <div className="app-root">
       {/* Navigation Bar */}
@@ -51,12 +59,40 @@ function App() {
             <div className="app-navbar-logo"></div>
             StudySync
           </div>
-          <NavLink className={({ isActive }) => "app-navbar-link" + (isActive ? " active" : "") } to="/dashboard">Dashboard</NavLink>
-          <NavLink className={({ isActive }) => "app-navbar-link" + (isActive ? " active" : "") } to="/group">Group</NavLink>
+          <NavLink
+            className={({ isActive }) =>
+              "app-navbar-link" + (isActive ? " active" : "")
+            }
+            to="/dashboard"
+          >
+            Dashboard
+          </NavLink>
+          <NavLink
+            className={({ isActive }) =>
+              "app-navbar-link" + (isActive ? " active" : "")
+            }
+            to="/group"
+          >
+            Group
+          </NavLink>
           {loading ? null : user ? (
-            <NavLink className={({ isActive }) => "app-navbar-link" + (isActive ? " active" : "") } to="/profile">Profile</NavLink>
+            <NavLink
+              className={({ isActive }) =>
+                "app-navbar-link" + (isActive ? " active" : "")
+              }
+              to="/profile"
+            >
+              Profile
+            </NavLink>
           ) : (
-            <NavLink className={({ isActive }) => "app-navbar-link" + (isActive ? " active" : "") } to="/login">Login</NavLink>
+            <NavLink
+              className={({ isActive }) =>
+                "app-navbar-link" + (isActive ? " active" : "")
+              }
+              to="/login"
+            >
+              Login
+            </NavLink>
           )}
         </div>
       </nav>
@@ -64,8 +100,23 @@ function App() {
       <header className="app-hero">
         <div className="app-hero-content">
           <h1 className="app-hero-title">StudySync</h1>
-          <h2 className="app-hero-subtitle">The ultimate platform for collaborative group study. Connect, learn, and grow together with friends!</h2>
-          <NavLink to="/dashboard" className="app-hero-button">Get Started</NavLink>
+          <h2 className="app-hero-subtitle">
+            The ultimate platform for collaborative group study. Connect, learn,
+            and grow together with friends!
+          </h2>
+          <button
+            className="app-hero-button"
+            onClick={() => {
+              if (loading) return;
+              if (user) {
+                navigate("/dashboard");
+              } else {
+                navigate("/login");
+              }
+            }}
+          >
+            Get Started
+          </button>
         </div>
       </header>
       {/* Features Carousel Section */}
@@ -83,7 +134,9 @@ function App() {
           </div>
         </div>
       </section>
-      <Chatbot />
+      <div style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 1000 }}>
+        <Chatbot />
+      </div>
     </div>
   );
 }
