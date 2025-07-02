@@ -7,8 +7,6 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { sendGroupInvite, fetchGroupMembers } from '../api/api';
 import { db } from '../api/firebaseConfig';
 import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
-
-// Add these imports for group invites
 import { getFriends } from '../api/api';
 
 const features = [
@@ -21,8 +19,6 @@ const features = [
 const Dashboard = () => {
   const navigate = useNavigate();
   const [showCreateGroup, setShowCreateGroup] = useState(false);
-
-  // Group invites state
   const [currentUser, setCurrentUser] = useState(null);
   const [groupInvites, setGroupInvites] = useState([]);
   const [inviteMessage, setInviteMessage] = useState('');
