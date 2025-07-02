@@ -8,6 +8,7 @@ import {
     respondToFriendRequest,
     getFriends
 } from '../api/api';
+import './FriendsPage.css';
 
 const FriendsPage = () => {
     const [currentUser, setCurrentUser] = useState(null);
@@ -132,35 +133,35 @@ const FriendsPage = () => {
     const isRequestSent = (userId) => outgoingRequests.some(r => r.toUserId === userId);
 
     return (
-        <div style={{ maxWidth: 600, margin: '0 auto', padding: 24 }}>
-            <h2>Friends</h2>
-            {message && <div style={{ color: 'green', marginBottom: 8 }}>{message}</div>}
-            <form onSubmit={handleSearch} style={{ marginBottom: 16 }}>
+        <div className="friends-container">
+            <h2 className="friends-title">Friends</h2>
+            {message && <div className="friends-message">{message}</div>}
+            <form onSubmit={handleSearch} className="friends-search-form">
                 <input
                     type="text"
                     placeholder="Search users by name or ID"
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    style={{ padding: 8, width: '70%' }}
+                    className="friends-search-input"
                 />
-                <button type="submit" style={{ padding: 8, marginLeft: 8 }} disabled={loading}>
+                <button type="submit" className="friends-search-button" disabled={loading}>
                     Search
                 </button>
             </form>
             {searchResults.length > 0 && (
-                <div style={{ marginBottom: 24 }}>
+                <div className="friends-search-results">
                     <h4>Search Results</h4>
-                    <ul>
+                    <ul className="friends-list">
                         {searchResults.map(user => (
-                            <li key={user.id} style={{ marginBottom: 8 }}>
+                            <li key={user.id} className="friends-list-item">
                                 {user.name} (ID: {user.id})
                                 {isFriend(user.id) ? (
-                                    <span style={{ marginLeft: 12, color: 'green', fontWeight: 600 }}>Already Friends</span>
+                                    <span className="friends-status friends-status-friend">Already Friends</span>
                                 ) : isRequestSent(user.id) ? (
-                                    <span style={{ marginLeft: 12, color: 'orange', fontWeight: 600 }}>Request Sent</span>
+                                    <span className="friends-status friends-status-request">Request Sent</span>
                                 ) : (
                                     <button
-                                        style={{ marginLeft: 12 }}
+                                        className="friends-action-button"
                                         onClick={() => handleSendRequest(user.id)}
                                         disabled={loading}
                                     >
@@ -172,24 +173,24 @@ const FriendsPage = () => {
                     </ul>
                 </div>
             )}
-            <div style={{ marginBottom: 24 }}>
+            <div className="friends-section">
                 <h4>Incoming Friend Requests</h4>
                 {incomingRequests.length === 0 ? (
-                    <div>No incoming requests.</div>
+                    <div className="friends-empty">No incoming requests.</div>
                 ) : (
-                    <ul>
+                    <ul className="friends-list">
                         {incomingRequests.map(req => (
-                            <li key={req.id} style={{ marginBottom: 8 }}>
+                            <li key={req.id} className="friends-list-item">
                                 From: {req.fromUserId}
                                 <button
-                                    style={{ marginLeft: 12 }}
+                                    className="friends-action-button"
                                     onClick={() => handleRespond(req.id, true)}
                                     disabled={loading}
                                 >
                                     Accept
                                 </button>
                                 <button
-                                    style={{ marginLeft: 8 }}
+                                    className="friends-action-button friends-action-reject"
                                     onClick={() => handleRespond(req.id, false)}
                                     disabled={loading}
                                 >
@@ -200,14 +201,14 @@ const FriendsPage = () => {
                     </ul>
                 )}
             </div>
-            <div>
+            <div className="friends-section">
                 <h4>Your Friends</h4>
                 {friends.length === 0 ? (
-                    <div>No friends yet.</div>
+                    <div className="friends-empty">No friends yet.</div>
                 ) : (
-                    <ul>
+                    <ul className="friends-list">
                         {friends.map(friend => (
-                            <li key={friend.id}>{friend.name} (ID: {friend.id})</li>
+                            <li key={friend.id} className="friends-list-item">{friend.name} (ID: {friend.id})</li>
                         ))}
                     </ul>
                 )}
