@@ -4,6 +4,8 @@ import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../../api/firebaseConfig';
 import { useNavigate, NavLink } from 'react-router-dom';
 import { FaUser, FaEnvelope, FaLock, FaUserPlus } from 'react-icons/fa';
+import { setDoc, doc } from 'firebase/firestore';
+import { db } from '../../api/firebaseConfig';
 
 const SignupForm = () => {
   const [name, setName] = useState('');
@@ -18,6 +20,11 @@ const SignupForm = () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(userCredential.user, { displayName: name });
+      // Add user info to Firestore
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        displayName: name,
+        email: userCredential.user.email,
+      }, { merge: true });
       navigate('/dashboard');
     } catch (err) {
       setError(err.message);
