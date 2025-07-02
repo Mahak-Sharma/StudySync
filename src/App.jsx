@@ -76,14 +76,24 @@ function App() {
             Group
           </NavLink>
           {loading ? null : user ? (
-            <NavLink
-              className={({ isActive }) =>
-                "app-navbar-link" + (isActive ? " active" : "")
-              }
-              to="/profile"
-            >
-              Profile
-            </NavLink>
+            <>
+              <NavLink
+                className={({ isActive }) =>
+                  "app-navbar-link" + (isActive ? " active" : "")
+                }
+                to="/profile"
+              >
+                Profile
+              </NavLink>
+              <NavLink
+                className={({ isActive }) =>
+                  "app-navbar-link" + (isActive ? " active" : "")
+                }
+                to="/your-summaries"
+              >
+                Your Summaries
+              </NavLink>
+            </>
           ) : (
             <NavLink
               className={({ isActive }) =>

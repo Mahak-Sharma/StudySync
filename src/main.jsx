@@ -13,6 +13,7 @@ import ChatBox from './components/Chat/ChatBox';
 import TodoBoard from './components/Todo/TodoBoard';
 import Chatbot from './components/Chatbot/Chatbot';
 import GroupDetailPage from './pages/GroupDetailPage';
+import YourSummaries from './pages/YourSummaries';
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -29,6 +30,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/profile" element={<Profile />} />
           <Route path="/signup" element={<SignupForm />} />
           <Route path="/login" element={<LoginForm />} />
+          <Route path="/your-summaries" element={<YourSummaries />} />
         </Routes>
         <div style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 1000 }}>
           <Chatbot />
