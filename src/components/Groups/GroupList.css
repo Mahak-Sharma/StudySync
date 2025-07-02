@@ -1,7 +1,31 @@
 .group-list-container {
-  /* Add your GroupList styles here */
+  background: rgba(255,255,255,0.85);
+  box-shadow: 0 4px 24px rgba(25, 118, 210, 0.10);
+  border-radius: 18px;
+  padding: 24px 0;
+  margin: 24px 0;
+  backdrop-filter: blur(8px) saturate(1.1);
 }
 
 .group-list-item {
-  /* Add your GroupList item styles here */
+  background: linear-gradient(120deg, #f7f8fa 0%, #e3f0ff 100%);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.07);
+  padding: 18px 20px;
+  margin: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 1.08rem;
+  color: #222;
+  transition: box-shadow 0.18s, transform 0.18s, background 0.18s;
+  animation: fadeInUp 1.1s;
+}
+
+.group-list-item:hover, .group-list-item:focus {
+  box-shadow: 0 6px 24px rgba(25, 118, 210, 0.13);
+  background: linear-gradient(120deg, #e3f0ff 0%, #f7f8fa 100%);
+  transform: translateY(-2px) scale(1.02);
+  outline: 2.5px solid #1976d2;
+  outline-offset: 2px;
 } 
