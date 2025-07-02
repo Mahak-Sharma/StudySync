@@ -1,0 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap');
+
+.todo-item-container {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #e3eafc;
+  color: #333;
+  font-size: 1.01rem;
+  font-family: 'Poppins', 'Segoe UI', 'Roboto', Arial, sans-serif;
+}
+
+.todo-item-checkbox {
+  margin-right: 10px;
+  accent-color: #1976d2;
+  width: 18px;
+  height: 18px;
+}
+
+.todo-item-checked {
+  text-decoration: line-through;
+  color: #aaa;
+  font-family: 'Poppins', 'Segoe UI', 'Roboto', Arial, sans-serif;
+} 

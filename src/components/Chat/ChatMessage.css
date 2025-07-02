@@ -1,0 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap');
+
+.chat-message-container {
+  padding: 8px 0;
+  border-bottom: 1px solid #e3eafc;
+  color: #333;
+  font-size: 1.01rem;
+  display: flex;
+  align-items: flex-start;
+  font-family: 'Poppins', 'Segoe UI', 'Roboto', Arial, sans-serif;
+}
+
+.chat-message-user {
+  font-weight: 700;
+  margin-right: 8px;
+  color: #1976d2;
+  font-family: 'Poppins', 'Segoe UI', 'Roboto', Arial, sans-serif;
+} 

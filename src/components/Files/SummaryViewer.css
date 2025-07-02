@@ -1,0 +1,21 @@
+.summary-viewer-container {
+  max-width: 600px;
+  margin: 32px auto;
+  padding: 28px 20px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(25, 118, 210, 0.07);
+}
+
+.summary-viewer-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1976d2;
+  margin-bottom: 12px;
+}
+
+.summary-viewer-content {
+  color: #333;
+  font-size: 1.05rem;
+  line-height: 1.6;
+} 

@@ -1,0 +1,17 @@
+# After downloading/cloning this project, open a terminal (cmd) in the project root directory (where package.json is located) and run:
+
+npm install
+
+# This will install all necessary backend, frontend, and dev dependencies as specified in package.json.
+# Make sure Node.js and npm are installed on your system.
+
+# Backend dependencies
+npm install express cors firebase-admin
+
+# Frontend dependencies
+npm install firebase react-router-dom react react-dom react-icons @mui/material @mui/icons-material @emotion/react @emotion/styled @google/generative-ai
+
+# Dev dependencies (for development/build/linting)
+npm install --save-dev vite @vitejs/plugin-react eslint @eslint/js eslint-plugin-react-hooks eslint-plugin-react-refresh globals @types/react @types/react-dom
+
+# Firestore and Auth are included with 'firebase' package 
