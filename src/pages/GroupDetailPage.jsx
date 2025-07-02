@@ -65,7 +65,6 @@ const GroupDetailPage = () => {
         const groupSnap = await getDoc(groupRef);
         if (groupSnap.exists()) {
           const memberIds = groupSnap.data().members || [];
-          // Fetch user info for each member
           const userDocs = await Promise.all(
             memberIds.map(async (uid) => {
               const userRef = doc(db, 'users', uid);
@@ -90,7 +89,6 @@ const GroupDetailPage = () => {
     fetchMembers();
   }, [groupId]);
 
-  // Fetch friends when currentUser changes
   useEffect(() => {
     const fetchFriendsList = async () => {
       if (!currentUser) return;
@@ -104,7 +102,6 @@ const GroupDetailPage = () => {
     fetchFriendsList();
   }, [currentUser]);
 
-  // Filter friends not in group
   const memberIds = members.map(m => m.uid);
   const friendsNotInGroup = friends.filter(f => !memberIds.includes(f.id));
 
@@ -124,10 +121,8 @@ const GroupDetailPage = () => {
   const handleRemoveMember = async (uid) => {
     setRemovingMember(uid);
     try {
-      // Remove from group members
       const groupRef = doc(db, 'groups', groupId);
       await updateDoc(groupRef, { members: arrayRemove(uid) });
-      // Remove group from user's groups
       const userRef = doc(db, 'users', uid);
       const userSnap = await getDoc(userRef);
       if (userSnap.exists()) {
@@ -135,7 +130,6 @@ const GroupDetailPage = () => {
         const updatedGroups = userGroups.filter(g => (typeof g === 'string' ? g !== groupId : g.id !== groupId));
         await updateDoc(userRef, { groups: updatedGroups });
       }
-      // Refresh members
       setMembers(members => members.filter(m => m.uid !== uid));
     } catch (e) {
       alert('Failed to remove member');
@@ -148,7 +142,6 @@ const GroupDetailPage = () => {
     if (!window.confirm('Are you sure you want to delete this group? This cannot be undone.')) return;
     setDeletingGroup(true);
     try {
-      // Remove group from all members' user docs
       for (const m of members) {
         const userRef = doc(db, 'users', m.uid);
         const userSnap = await getDoc(userRef);
@@ -158,7 +151,6 @@ const GroupDetailPage = () => {
           await updateDoc(userRef, { groups: updatedGroups });
         }
       }
-      // Delete group doc
       await deleteDoc(doc(db, 'groups', groupId));
       window.location.href = '/group';
     } catch (e) {
@@ -174,7 +166,6 @@ const GroupDetailPage = () => {
       </h2>
       <div style={{ marginBottom: 32 }}>
         <h3 style={{ color: '#1976d2', fontWeight: 700 }}>Group Members</h3>
-        {/* Delete Group button for creator */}
         {currentUser && creatorId === currentUser.uid && (
           <button
             style={{ marginBottom: 12, marginLeft: 12, padding: '6px 16px', background: '#d32f2f', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}
