@@ -25,9 +25,9 @@ const CreateGroupModal = ({ open, onClose }) => {
         });
         setCreatedGroupId(docRef.id);
         setGroupName("");
-        // Add group to user's document
+        // Add group to user's document as { id, name }
         const userRef = doc(db, "users", user.uid);
-        await setDoc(userRef, { groups: arrayUnion(docRef.id) }, { merge: true });
+        await setDoc(userRef, { groups: arrayUnion({ id: docRef.id, name: groupName }) }, { merge: true });
       } catch (err) {
         setError("Error creating group: " + err.message);
       }
