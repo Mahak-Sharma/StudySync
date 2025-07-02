@@ -23,11 +23,20 @@ const GroupDashboard = () => {
       const userSnap = await getDoc(userRef);
       const groupIds = userSnap.exists() && userSnap.data().groups ? userSnap.data().groups : [];
       const groupList = [];
-      for (const groupId of groupIds) {
+      for (const groupObj of groupIds) {
+        // groupObj can be a string (old) or object (new)
+        let groupId, groupName;
+        if (typeof groupObj === 'string') {
+          groupId = groupObj;
+          groupName = undefined;
+        } else {
+          groupId = groupObj.id;
+          groupName = groupObj.name;
+        }
         const groupRef = doc(db, 'groups', groupId);
         const groupSnap = await getDoc(groupRef);
         if (groupSnap.exists()) {
-          groupList.push({ id: groupId, ...groupSnap.data() });
+          groupList.push({ id: groupId, name: groupName || groupSnap.data().name, ...groupSnap.data() });
         }
       }
       setUserGroups(groupList);
@@ -54,9 +63,9 @@ const GroupDashboard = () => {
       }
       // Add user to group members
       await updateDoc(groupRef, { members: arrayUnion(user.uid) });
-      // Add group to user's groups
+      // Add group to user's groups as { id, name }
       const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, { groups: arrayUnion(joinGroupId.trim()) });
+      await updateDoc(userRef, { groups: arrayUnion({ id: joinGroupId.trim(), name: groupSnap.data().name }) });
       setJoinSuccess('Successfully joined group!');
       setJoinGroupId('');
       // Refresh group list

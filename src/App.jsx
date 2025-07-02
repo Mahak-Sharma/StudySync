@@ -48,7 +48,7 @@ const features = [
 function App() {
   // Duplicate features for seamless carousel
   const carouselFeatures = [...features, ...features];
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
   const navigate = useNavigate();
   return (
     <div className="app-root">
@@ -93,6 +93,16 @@ function App() {
               >
                 Your Summaries
               </NavLink>
+              <button
+                className="app-navbar-link"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1976d2', fontWeight: 600, fontSize: '1em', marginLeft: 12 }}
+                onClick={async () => {
+                  await logout();
+                  navigate('/login');
+                }}
+              >
+                Logout
+              </button>
             </>
           ) : (
             <NavLink
