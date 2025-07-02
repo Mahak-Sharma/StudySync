@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify, send_from_directory
 import os
 from werkzeug.utils import secure_filename
 from summarize import extract_text_from_pdf, extract_text_from_docx, extract_text_from_image, summarize_text
+from summary_store import add_summary, get_summaries
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'docx', 'png', 'jpg', 'jpeg', 'bmp', 'tiff'}
@@ -20,6 +21,8 @@ def summarize_file():
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
     file = request.files['file']
+    user_id = request.form.get('user_id')
+    group_id = request.form.get('group_id')
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
     if file and allowed_file(file.filename):
@@ -36,9 +39,17 @@ def summarize_file():
         else:
             return jsonify({'error': 'Unsupported file format'}), 400
         summary = summarize_text(text)
+        add_summary(summary, user_id, group_id, filename)
         return jsonify({'summary': summary, 'filename': filename})
     else:
         return jsonify({'error': 'File type not allowed'}), 400
+
+@app.route('/summaries', methods=['GET'])
+def fetch_summaries():
+    group_id = request.args.get('groupId')
+    user_id = request.args.get('userId')
+    summaries = get_summaries(group_id=group_id, user_id=user_id)
+    return jsonify({'summaries': summaries})
 
 @app.route('/download/<filename>', methods=['GET'])
 def download_file(filename):

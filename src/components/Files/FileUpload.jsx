@@ -1,16 +1,18 @@
 import './FileUpload.css';
 import { FaDownload } from 'react-icons/fa';
 import React, { useRef, useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 
 const API_URL = 'http://localhost:5000'; // Change if backend runs elsewhere
 
-const FileUpload = () => {
+const FileUpload = ({ groupId = null }) => {
   const fileInputRef = useRef();
   const [selectedFile, setSelectedFile] = useState(null);
   const [summary, setSummary] = useState("");
   const [uploadedFilename, setUploadedFilename] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { user } = useAuth();
 
   const handleUploadClick = () => {
     fileInputRef.current.click();
@@ -31,6 +33,8 @@ const FileUpload = () => {
     setError("");
     const formData = new FormData();
     formData.append('file', selectedFile);
+    formData.append('user_id', user ? user.uid : 'demo-user');
+    formData.append('group_id', groupId);
     try {
       const res = await fetch(`${API_URL}/summarize`, {
         method: 'POST',

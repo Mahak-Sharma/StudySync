@@ -5,9 +5,9 @@ import FileUpload from './FileUpload';
 // No preloaded files
 const files = [];
 
-const FileList = () => (
+const FileList = ({ groupId = null }) => (
   <div className="file-list-container">
-    <FileUpload />
+    <FileUpload groupId={groupId} />
     <h3 className="file-list-title">Uploaded Files</h3>
     <ul className="file-list-list">
       {files.length === 0 ? (
