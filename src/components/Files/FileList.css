@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap');
+
 .file-list-container {
   max-width: 600px;
   margin: 32px auto;
@@ -6,6 +8,7 @@
   border-radius: 16px;
   box-shadow: 0 4px 24px rgba(25, 118, 210, 0.10);
   text-align: center;
+  font-family: 'Poppins', 'Segoe UI', 'Roboto', Arial, sans-serif;
 }
 
 .file-list-title {
@@ -79,4 +82,10 @@
   box-shadow: 0 2px 8px rgba(25, 118, 210, 0.07);
   border-radius: 10px;
   color: #222;
+}
+
+.file-list-header {
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: #1976d2;
 } 
