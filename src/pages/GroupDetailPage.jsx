@@ -7,7 +7,8 @@ import { fetchGroupSummaries, getFriends, fetchGroupMembers, sendGroupInvite } f
 import { db } from '../api/firebaseConfig';
 import { doc, getDoc, updateDoc, arrayRemove, deleteDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { FaHome, FaTachometerAlt, FaComments, FaFileAlt, FaListAlt, FaBars } from 'react-icons/fa';
+import { FaHome, FaTachometerAlt, FaComments, FaFileAlt, FaListAlt, FaBars, FaVideo } from 'react-icons/fa';
+import GroupVideoCallComponent from '../components/VideoCall/GroupVideoCallComponent';
 
 const GroupDetailPage = () => {
   const { groupId } = useParams();
@@ -28,6 +29,7 @@ const GroupDetailPage = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [selectedSection, setSelectedSection] = useState('');
   const [fade, setFade] = useState(false);
+  const [groupCallOpen, setGroupCallOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(getAuth(), user => {
@@ -186,9 +188,13 @@ const GroupDetailPage = () => {
           <span className="side-panel-icon"><FaTachometerAlt /></span>
           {!collapsed && <span className="side-panel-label">Dashboard</span>}
         </button>
-        <button className={`side-panel-btn${selectedSection === 'chat' ? ' active' : ''}`} onClick={() => handleSectionChange('chat')}>
+        <button className={`side-panel-btn${selectedSection === 'groupchat' ? ' active' : ''}`} onClick={() => handleSectionChange('chat')}>
           <span className="side-panel-icon"><FaComments /></span>
-          {!collapsed && <span className="side-panel-label">Chat</span>}
+          {!collapsed && <span className="side-panel-label">Group Chat</span>}
+        </button>
+        <button className="side-panel-btn" onClick={() => setGroupCallOpen(true)}>
+          <span className="side-panel-icon"><FaVideo /></span>
+          {!collapsed && <span className="side-panel-label">Group Video Call</span>}
         </button>
         <button className={`side-panel-btn${selectedSection === 'files' ? ' active' : ''}`} onClick={() => handleSectionChange('files')}>
           <span className="side-panel-icon"><FaFileAlt /></span>
@@ -273,10 +279,26 @@ const GroupDetailPage = () => {
           </>
         )}
         {selectedSection === 'chat' && (
-          <div style={{ marginBottom: 32 }}>
-            <h3 style={{ color: '#1976d2', fontWeight: 700 }}>Group Chat</h3>
-            <ChatBox groupId={groupId} />
-          </div>
+          <>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+              <button
+                className="group-call-btn"
+                onClick={() => setGroupCallOpen(true)}
+              >
+                📹 Start Group Call
+              </button>
+            </div>
+            <div style={{ marginBottom: 32 }}>
+              <h3 style={{ color: '#1976d2', fontWeight: 700 }}>Group Chat</h3>
+              <ChatBox groupId={groupId} />
+            </div>
+            <GroupVideoCallComponent
+              isOpen={groupCallOpen}
+              onClose={() => setGroupCallOpen(false)}
+              groupId={groupId}
+              groupName={groupName}
+            />
+          </>
         )}
         {selectedSection === 'files' && (
           <>

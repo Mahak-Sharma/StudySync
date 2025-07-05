@@ -449,4 +449,16 @@
     padding: 16px 18px;
     font-size: 1rem;
   }
+}
+
+/* Video Call Button Styles */
+.friends-video-call {
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  margin-left: 8px;
+}
+
+.friends-video-call:hover, .friends-video-call:focus {
+  background: #388e3c;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 24px rgba(76, 175, 80, 0.25);
 } 
