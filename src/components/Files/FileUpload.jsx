@@ -3,7 +3,7 @@ import { FaDownload } from 'react-icons/fa';
 import React, { useRef, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 
-const API_URL = 'http://localhost:5000'; // Change if backend runs elsewhere
+const API_URL = 'http://localhost:5001'; // Summarization backend runs on port 5001
 
 const FileUpload = ({ groupId = null }) => {
   const fileInputRef = useRef();

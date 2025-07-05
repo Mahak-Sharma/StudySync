@@ -20,21 +20,63 @@ A modern, collaborative group study platform built with React and Python.
 
 ## 🚀 Getting Started
 
-1. **Clone the repository:**
-   ```sh
-   git clone https://github.com/Mahak-Sharma/studysync.git
-   cd studysync
-   ```
-2. **Install dependencies:**
-   ```sh
-   npm install
-   ```
-3. **Start the development server:**
+### Prerequisites
+- **Node.js** (v16 or higher) - [Download here](https://nodejs.org/)
+- **Python** (v3.8 or higher) - [Download here](https://python.org/)
+- **pip** (Python package manager, usually comes with Python)
+
+### Quick Start (Complete Stack - Frontend + Both Backends)
+
+**Option 1: Using npm script (Recommended)**
+```sh
+npm install
+npm start
+```
+
+**Option 2: Using the startup script directly**
+```sh
+npm install
+node start-dev.js
+```
+
+**Option 3: Using platform-specific scripts**
+- **Windows:** Double-click `start.bat` or run `start.bat` in Command Prompt
+- **Mac/Linux:** Run `./start.sh` in Terminal (make sure it's executable: `chmod +x start.sh`)
+
+### What This Does
+The startup script will:
+1. ✅ Check if Node.js and Python are installed
+2. 📦 Install npm dependencies (if not already installed)
+3. 🐍 Install Python dependencies for the backend
+4. 👥 Start the friends backend (Node.js/Express API on port 5000)
+5. 📄 Start the summarization backend (Python/Flask API on port 5001)
+6. 🎨 Start the React frontend (Vite dev server on port 5173)
+
+### Access Your Application
+- **Frontend:** [http://localhost:5173](http://localhost:5173)
+- **Friends Backend API:** [http://localhost:5000](http://localhost:5000) (User management, friends, groups)
+- **Summarization Backend API:** [http://localhost:5001](http://localhost:5001) (File processing, summaries)
+
+### Manual Start (Individual Services)
+If you prefer to start services individually:
+
+1. **Frontend only:**
    ```sh
    npm run dev
    ```
-4. **Open in your browser:**
-   Visit [http://localhost:5173](http://localhost:5173)
+
+2. **Friends Backend only (Node.js):**
+   ```sh
+   cd src/api
+   node friendsBackend.js
+   ```
+
+3. **Summarization Backend only (Python):**
+   ```sh
+   cd backend
+   pip install -r requirements.txt
+   python summarize_api.py
+   ```
 
 ## 📁 Project Structure
 - `src/components/` — All UI components (Auth, Chat, Groups, Files, Todo, Chatbot, etc.)
