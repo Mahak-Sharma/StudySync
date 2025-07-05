@@ -7,7 +7,8 @@ A modern, collaborative group study platform built with React and Python.
 - **Real-time Chat:** Discuss topics, share ideas, and stay connected.
 - **Live Polls:** Engage your group with instant polls and voting.
 - **Quizzes:** Test your knowledge with group quizzes and challenges.
-- **File Sharing:** Upload and share study materials and notes.
+- **AI File Processing:** Upload documents and images for instant AI-powered summarization.
+- **In-Memory Processing:** Files are processed in memory without saving to disk for privacy.
 - **Leaderboard:** Track your progress and compete with friends.
 - **Todo Board:** Organize study tasks and assignments.
 - **AI Chatbot:** Get instant study help and summaries.
@@ -52,6 +53,11 @@ The startup script will:
 5. 📄 Start the summarization backend (Python/Flask API on port 5001)
 6. 🎨 Start the React frontend (Vite dev server on port 5173)
 
+### 🔒 Privacy & Security
+- **No File Storage:** Uploaded files are processed in memory and never saved to disk
+- **Instant Processing:** Files are summarized immediately and then discarded
+- **Privacy First:** Your documents remain private and aren't stored on the server
+
 ### Access Your Application
 - **Frontend:** [http://localhost:5173](http://localhost:5173)
 - **Friends Backend API:** [http://localhost:5000](http://localhost:5000) (User management, friends, groups)
@@ -77,6 +83,13 @@ If you prefer to start services individually:
    pip install -r requirements.txt
    python summarize_api.py
    ```
+
+### 🧹 Cleanup (Optional)
+If you have an existing `backend/uploads` folder from the old version, you can clean it up:
+```sh
+python cleanup-uploads.py
+```
+This removes the old uploads folder since files are now processed in memory.
 
 ## 📁 Project Structure
 - `src/components/` — All UI components (Auth, Chat, Groups, Files, Todo, Chatbot, etc.)
