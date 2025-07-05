@@ -5,6 +5,7 @@ A modern, collaborative group study platform built with React and Python.
 ## ✨ Features
 - **Create & Join Groups:** Study together with friends in private or public groups.
 - **Real-time Chat:** Discuss topics, share ideas, and stay connected.
+- **Video Calling:** High-quality peer-to-peer video calls with friends using WebRTC.
 - **Live Polls:** Engage your group with instant polls and voting.
 - **Quizzes:** Test your knowledge with group quizzes and challenges.
 - **AI File Processing:** Upload documents and images for instant AI-powered summarization.
@@ -50,8 +51,9 @@ The startup script will:
 2. 📦 Install npm dependencies (if not already installed)
 3. 🐍 Install Python dependencies for the backend
 4. 👥 Start the friends backend (Node.js/Express API on port 5000)
-5. 📄 Start the summarization backend (Python/Flask API on port 5001)
-6. 🎨 Start the React frontend (Vite dev server on port 5173)
+5. 🎥 Start the video call server (Node.js/Socket.IO on port 5002)
+6. 📄 Start the summarization backend (Python/Flask API on port 5001)
+7. 🎨 Start the React frontend (Vite dev server on port 5173)
 
 ### 🔒 Privacy & Security
 - **No File Storage:** Uploaded files are processed in memory and never saved to disk
@@ -61,6 +63,7 @@ The startup script will:
 ### Access Your Application
 - **Frontend:** [http://localhost:5173](http://localhost:5173)
 - **Friends Backend API:** [http://localhost:5000](http://localhost:5000) (User management, friends, groups)
+- **Video Call Server:** [http://localhost:5002](http://localhost:5002) (WebRTC signaling)
 - **Summarization Backend API:** [http://localhost:5001](http://localhost:5001) (File processing, summaries)
 
 ### Manual Start (Individual Services)
