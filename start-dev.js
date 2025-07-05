@@ -50,6 +50,50 @@ function installPythonDependencies() {
     });
 }
 
+// Function to check and install video call server dependencies
+function installVideoCallDependencies() {
+    return new Promise((resolve, reject) => {
+        console.log('🎥 Checking video call server dependencies...');
+        const videoCallPath = join(__dirname, 'backend', 'video-call-server');
+        const packageJsonPath = join(videoCallPath, 'package.json');
+        
+        if (!existsSync(packageJsonPath)) {
+            console.log('⚠️  No package.json found in video call server, skipping dependency check');
+            resolve();
+            return;
+        }
+        
+        const npm = spawn('npm', ['install'], {
+            cwd: videoCallPath,
+            shell: true,
+            stdio: 'pipe'
+        });
+        
+        npm.stdout.on('data', (data) => {
+            console.log(`📦 Video Call: ${data.toString().trim()}`);
+        });
+        
+        npm.stderr.on('data', (data) => {
+            console.log(`📦 Video Call: ${data.toString().trim()}`);
+        });
+        
+        npm.on('close', (code) => {
+            if (code === 0) {
+                console.log('✅ Video call server dependencies installed successfully');
+                resolve();
+            } else {
+                console.error(`❌ Failed to install video call server dependencies (code: ${code})`);
+                reject(new Error(`NPM install failed with code ${code}`));
+            }
+        });
+        
+        npm.on('error', (error) => {
+            console.error(`💥 NPM install error: ${error.message}`);
+            reject(error);
+        });
+    });
+}
+
 // Function to start the friends backend server (Node.js/Express)
 function startFriendsBackend() {
     console.log('👥 Starting friends backend server...');
@@ -81,6 +125,39 @@ function startFriendsBackend() {
     });
 
     return friendsBackend;
+}
+
+// Function to start the video call server (Node.js/Socket.IO)
+function startVideoCallServer() {
+    console.log('🎥 Starting video call server...');
+    const videoCallPath = join(__dirname, 'backend', 'video-call-server');
+    const videoCallServer = spawn('node', ['server.js'], {
+        cwd: videoCallPath,
+        shell: true,
+        stdio: 'pipe',
+        env: {
+            ...process.env,
+            PORT: '5002'
+        }
+    });
+
+    videoCallServer.stdout.on('data', (data) => {
+        console.log(`🎥 Video Call Server: ${data.toString().trim()}`);
+    });
+
+    videoCallServer.stderr.on('data', (data) => {
+        console.error(`❌ Video Call Server Error: ${data.toString().trim()}`);
+    });
+
+    videoCallServer.on('close', (code) => {
+        console.log(`🔴 Video Call Server process exited with code ${code}`);
+    });
+
+    videoCallServer.on('error', (error) => {
+        console.error(`💥 Video Call Server failed to start: ${error.message}`);
+    });
+
+    return videoCallServer;
 }
 
 // Function to start the summarization backend server (Python/Flask)
@@ -165,8 +242,11 @@ async function startAllServices() {
     console.log('=' .repeat(60));
     
     try {
-        // Install Python dependencies first
-        await installPythonDependencies();
+        // Install dependencies first
+        await Promise.all([
+            installPythonDependencies(),
+            installVideoCallDependencies()
+        ]);
         
         const processes = [];
         
@@ -174,17 +254,23 @@ async function startAllServices() {
         const friendsBackendProcess = startFriendsBackend();
         processes.push(friendsBackendProcess);
         
-        // Wait a bit, then start summarization backend (will need different port)
+        // Wait a bit, then start video call server (port 5002)
+        setTimeout(() => {
+            const videoCallServerProcess = startVideoCallServer();
+            processes.push(videoCallServerProcess);
+        }, 2000);
+        
+        // Wait a bit more, then start summarization backend (port 5001)
         setTimeout(() => {
             const summarizationBackendProcess = startSummarizationBackend();
             processes.push(summarizationBackendProcess);
-        }, 2000);
+        }, 4000);
         
         // Wait a bit more, then start frontend
         setTimeout(() => {
             const frontendProcess = startFrontend();
             processes.push(frontendProcess);
-        }, 4000);
+        }, 6000);
         
         // Handle process termination
         process.on('SIGINT', () => handleShutdown(processes));

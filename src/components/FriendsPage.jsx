@@ -8,6 +8,7 @@ import {
     respondToFriendRequest,
     getFriends
 } from '../api/api';
+import { useVideoCallContext } from '../contexts/VideoCallContext';
 import './FriendsPage.css';
 
 const FriendsPage = () => {
@@ -19,6 +20,7 @@ const FriendsPage = () => {
     const [friends, setFriends] = useState([]);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
+    const { startCall } = useVideoCallContext();
 
     // Get current user from Firebase Auth
     useEffect(() => {
@@ -132,6 +134,11 @@ const FriendsPage = () => {
     // Helper: check if request is sent (outgoing)
     const isRequestSent = (userId) => outgoingRequests.some(r => r.toUserId === userId);
 
+    // Video call handlers
+    const startVideoCall = (friendId, friendName) => {
+        startCall(friendId, friendName);
+    };
+
     return (
         <div className="friends-container">
             <h2 className="friends-title">Friends</h2>
@@ -208,11 +215,22 @@ const FriendsPage = () => {
                 ) : (
                     <ul className="friends-list">
                         {friends.map(friend => (
-                            <li key={friend.id} className="friends-list-item">{friend.name} (ID: {friend.id})</li>
+                            <li key={friend.id} className="friends-list-item">
+                                {friend.name} (ID: {friend.id})
+                                <button
+                                    className="friends-action-button friends-video-call"
+                                    onClick={() => startVideoCall(friend.id, friend.name)}
+                                    title="Start video call"
+                                >
+                                    📹 Video Call
+                                </button>
+                            </li>
                         ))}
                     </ul>
                 )}
             </div>
+
+
         </div>
     );
 };
