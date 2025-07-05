@@ -1,81 +1,208 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap');
 
 .friends-container {
-  max-width: 600px;
+  max-width: 700px;
   margin: 40px auto 0 auto;
-  padding: 36px 24px 32px 24px;
-  background: rgba(255,255,255,0.85);
-  border-radius: 22px;
-  box-shadow: 0 8px 40px rgba(25, 118, 210, 0.13), 0 2px 8px rgba(66, 165, 245, 0.08);
-  backdrop-filter: blur(10px) saturate(1.2);
+  padding: 40px 32px 36px 32px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248, 251, 255, 0.9) 100%);
+  border-radius: 24px;
+  box-shadow: 0 12px 48px rgba(25, 118, 210, 0.15), 0 4px 16px rgba(66, 165, 245, 0.08);
+  backdrop-filter: blur(20px) saturate(1.3);
   font-family: 'Poppins', 'Segoe UI', 'Roboto', Arial, sans-serif;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: friends-float-in 1.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes friends-float-in {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.98);
+    box-shadow: 0 0px 0px rgba(25, 118, 210, 0.00);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-8px) scale(1.01);
+    box-shadow: 0 20px 60px rgba(25, 118, 210, 0.18);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    box-shadow: 0 12px 48px rgba(25, 118, 210, 0.15), 0 4px 16px rgba(66, 165, 245, 0.08);
+  }
 }
 
 .friends-title {
-  font-size: 2.1rem;
+  font-size: 2.4rem;
   font-weight: 900;
-  color: #1976d2;
-  margin-bottom: 18px;
-  letter-spacing: -1px;
+  background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 24px;
+  letter-spacing: -1.2px;
   text-align: center;
+  position: relative;
+}
+
+.friends-title::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%);
+  border-radius: 2px;
 }
 
 .friends-message {
   color: #1976d2;
-  background: #e3f0ff;
-  border-radius: 8px;
-  padding: 10px 16px;
-  margin-bottom: 16px;
+  background: linear-gradient(135deg, #e3f0ff 0%, #f0f8ff 100%);
+  border: 1px solid rgba(25, 118, 210, 0.2);
+  border-radius: 12px;
+  padding: 14px 20px;
+  margin-bottom: 20px;
   text-align: center;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.07);
+  box-shadow: 0 4px 16px rgba(25, 118, 210, 0.08);
+  animation: message-slide-in 0.6s ease-out;
+  backdrop-filter: blur(10px);
+}
+
+@keyframes message-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .friends-search-form {
   display: flex;
   align-items: center;
-  margin-bottom: 24px;
-  gap: 10px;
+  margin-bottom: 32px;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 16px 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(25, 118, 210, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
 }
 
 .friends-search-input {
   flex: 1;
-  padding: 12px 16px;
-  border: 1.5px solid #e3eafc;
-  border-radius: 8px;
-  font-size: 1rem;
-  background: #f7f8fa;
-  transition: border 0.2s;
+  padding: 14px 18px;
+  border: 2px solid rgba(227, 234, 252, 0.8);
+  border-radius: 12px;
+  font-size: 1.05rem;
+  background: rgba(247, 248, 250, 0.8);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Poppins', sans-serif;
+  color: #333;
 }
+
 .friends-search-input:focus {
-  border: 1.5px solid #1976d2;
+  border: 2px solid #1976d2;
   outline: none;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.1);
+  transform: translateY(-1px);
+}
+
+.friends-search-input::placeholder {
+  color: #8b9dc3;
+  font-weight: 400;
 }
 
 .friends-search-button {
-  background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%);
+  background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 12px 22px;
-  font-size: 1.08rem;
+  border-radius: 12px;
+  padding: 14px 26px;
+  font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s, transform 0.15s;
-  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
-  font-family: 'Poppins', 'Segoe UI', 'Roboto', Arial, sans-serif;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 16px rgba(25, 118, 210, 0.15);
+  font-family: 'Poppins', sans-serif;
+  position: relative;
+  overflow: hidden;
 }
+
+.friends-search-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.friends-search-button:hover::before {
+  left: 100%;
+}
+
 .friends-search-button:hover, .friends-search-button:focus {
-  background: #1251a3;
-  transform: scale(1.04);
+  background: linear-gradient(135deg, #1565c0 0%, #1976d2 100%);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 24px rgba(25, 118, 210, 0.25);
+}
+
+.friends-search-button:disabled {
+  background: #bdbdbd;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .friends-search-results {
-  margin-bottom: 28px;
+  margin-bottom: 36px;
+  animation: section-fade-in 0.8s ease-out;
+}
+
+@keyframes section-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .friends-section {
-  margin-bottom: 28px;
+  margin-bottom: 36px;
+  animation: section-fade-in 0.8s ease-out;
+}
+
+.friends-section h4 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1976d2;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid rgba(25, 118, 210, 0.1);
+  position: relative;
+}
+
+.friends-section h4::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%);
+  border-radius: 1px;
 }
 
 .friends-list {
@@ -84,71 +211,242 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .friends-list-item {
-  background: linear-gradient(120deg, #f7f8fa 0%, #e3f0ff 100%);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.07);
-  padding: 14px 18px;
-  color: #222;
-  font-size: 1.08rem;
+  background: linear-gradient(135deg, rgba(247, 248, 250, 0.9) 0%, rgba(227, 240, 255, 0.8) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(25, 118, 210, 0.08);
+  padding: 18px 22px;
+  color: #2c3e50;
+  font-size: 1.1rem;
+  font-weight: 500;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  transition: box-shadow 0.18s, transform 0.18s, background 0.18s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
 }
+
+.friends-list-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, #1976d2 0%, #42a5f5 100%);
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
+}
+
+.friends-list-item:hover::before {
+  transform: scaleY(1);
+}
+
 .friends-list-item:hover, .friends-list-item:focus {
-  box-shadow: 0 6px 24px rgba(25, 118, 210, 0.13);
-  background: linear-gradient(120deg, #e3f0ff 0%, #f7f8fa 100%);
-  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 32px rgba(25, 118, 210, 0.15);
+  background: linear-gradient(135deg, rgba(227, 240, 255, 0.95) 0%, rgba(247, 248, 250, 0.9) 100%);
+  transform: translateY(-3px) scale(1.02);
+  border-color: rgba(25, 118, 210, 0.2);
 }
 
 .friends-status {
   margin-left: 16px;
   font-weight: 600;
-  font-size: 1em;
+  font-size: 0.95rem;
+  padding: 6px 12px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
+
+.friends-status::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
 .friends-status-friend {
   color: #2e7d32;
+  background: rgba(46, 125, 50, 0.1);
+  border: 1px solid rgba(46, 125, 50, 0.2);
 }
+
+.friends-status-friend::before {
+  background: #4caf50;
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+}
+
 .friends-status-request {
-  color: #ff9800;
+  color: #f57c00;
+  background: rgba(245, 124, 0, 0.1);
+  border: 1px solid rgba(245, 124, 0, 0.2);
+}
+
+.friends-status-request::before {
+  background: #ff9800;
+  box-shadow: 0 0 8px rgba(255, 152, 0, 0.4);
 }
 
 .friends-action-button {
-  background: #1976d2;
+  background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
   color: #fff;
   border: none;
-  border-radius: 6px;
-  padding: 7px 16px;
-  font-size: 1em;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 0.95rem;
   font-weight: 600;
   margin-left: 12px;
   cursor: pointer;
-  transition: background 0.18s, transform 0.15s;
-  box-shadow: 0 1px 4px rgba(25, 118, 210, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 3px 12px rgba(25, 118, 210, 0.15);
+  font-family: 'Poppins', sans-serif;
+  position: relative;
+  overflow: hidden;
 }
+
+.friends-action-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+}
+
+.friends-action-button:hover::before {
+  width: 200%;
+  height: 200%;
+}
+
 .friends-action-button:hover, .friends-action-button:focus {
-  background: #1251a3;
-  transform: scale(1.04);
+  background: linear-gradient(135deg, #1565c0 0%, #1976d2 100%);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 20px rgba(25, 118, 210, 0.25);
 }
+
 .friends-action-reject {
-  background: #e53935;
+  background: linear-gradient(135deg, #e53935 0%, #f44336 100%);
   margin-left: 8px;
 }
+
 .friends-action-reject:hover, .friends-action-reject:focus {
-  background: #b71c1c;
+  background: linear-gradient(135deg, #c62828 0%, #d32f2f 100%);
+  box-shadow: 0 6px 20px rgba(229, 57, 53, 0.25);
 }
 
 .friends-empty {
-  color: #888;
-  background: #f7f8fa;
-  border-radius: 10px;
-  padding: 14px 0;
-  font-size: 1.08rem;
+  color: #7b7b7b;
+  background: linear-gradient(135deg, rgba(247, 248, 250, 0.8) 0%, rgba(240, 242, 245, 0.6) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 14px;
+  padding: 20px;
+  font-size: 1.1rem;
   font-style: italic;
-  box-shadow: none;
+  font-weight: 500;
   text-align: center;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  animation: empty-pulse 2s ease-in-out infinite;
+}
+
+@keyframes empty-pulse {
+  0%, 100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+/* Loading state */
+.friends-container.loading {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.friends-container.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(25, 118, 210, 0.2);
+  border-top: 3px solid #1976d2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .friends-container {
+    margin: 20px 16px;
+    padding: 28px 20px 24px 20px;
+    border-radius: 20px;
+  }
+  
+  .friends-title {
+    font-size: 2rem;
+  }
+  
+  .friends-search-form {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .friends-search-button {
+    width: 100%;
+  }
+  
+  .friends-list-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .friends-action-button {
+    margin-left: 0;
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .friends-container {
+    margin: 16px 12px;
+    padding: 24px 16px 20px 16px;
+  }
+  
+  .friends-title {
+    font-size: 1.8rem;
+  }
+  
+  .friends-section h4 {
+    font-size: 1.2rem;
+  }
+  
+  .friends-list-item {
+    padding: 16px 18px;
+    font-size: 1rem;
+  }
 } 
