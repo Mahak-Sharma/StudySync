@@ -1,21 +1,196 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap');
+
 .summary-viewer-container {
-  max-width: 600px;
+  max-width: 700px;
   margin: 32px auto;
-  padding: 28px 20px;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 2px 12px rgba(25, 118, 210, 0.07);
+  padding: 36px 32px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 251, 255, 0.9) 100%);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(25, 118, 210, 0.12), 0 4px 16px rgba(66, 165, 245, 0.08);
+  backdrop-filter: blur(15px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-family: 'Poppins', 'Segoe UI', 'Roboto', Arial, sans-serif;
+  animation: summary-viewer-fade-in 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.summary-viewer-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%);
+}
+
+@keyframes summary-viewer-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .summary-viewer-title {
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: #1976d2;
-  margin-bottom: 12px;
+  background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 20px;
+  letter-spacing: -0.5px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.summary-viewer-title::before {
+  content: '📄';
+  font-size: 1.8rem;
+  filter: drop-shadow(0 2px 4px rgba(25, 118, 210, 0.2));
+}
+
+.summary-viewer-title::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%);
+  border-radius: 2px;
 }
 
 .summary-viewer-content {
-  color: #333;
-  font-size: 1.05rem;
-  line-height: 1.6;
+  color: #2c3e50;
+  font-size: 1.1rem;
+  line-height: 1.7;
+  font-weight: 400;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(25, 118, 210, 0.08);
+  animation: content-slide-in 0.6s ease-out 0.2s both;
+  position: relative;
+}
+
+.summary-viewer-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, #1976d2 0%, #42a5f5 100%);
+  border-radius: 0 2px 2px 0;
+}
+
+@keyframes content-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.summary-viewer-content p {
+  margin-bottom: 16px;
+  text-align: justify;
+}
+
+.summary-viewer-content p:last-child {
+  margin-bottom: 0;
+}
+
+.summary-viewer-content strong {
+  color: #1976d2;
+  font-weight: 600;
+}
+
+.summary-viewer-content em {
+  color: #666;
+  font-style: italic;
+}
+
+/* Loading state */
+.summary-viewer-loading {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+  font-style: italic;
+}
+
+.summary-viewer-loading::after {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(25, 118, 210, 0.2);
+  border-top: 2px solid #1976d2;
+  border-radius: 50%;
+  animation: summary-spin 1s linear infinite;
+  margin-left: 12px;
+}
+
+@keyframes summary-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error state */
+.summary-viewer-error {
+  background: linear-gradient(135deg, rgba(255, 235, 238, 0.9) 0%, rgba(255, 240, 245, 0.8) 100%);
+  border: 1px solid rgba(244, 67, 54, 0.2);
+  color: #d32f2f;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .summary-viewer-container {
+    margin: 24px 16px;
+    padding: 28px 24px;
+    border-radius: 16px;
+  }
+  
+  .summary-viewer-title {
+    font-size: 1.3rem;
+  }
+  
+  .summary-viewer-content {
+    padding: 20px;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-viewer-container {
+    margin: 20px 12px;
+    padding: 24px 20px;
+  }
+  
+  .summary-viewer-title {
+    font-size: 1.2rem;
+  }
+  
+  .summary-viewer-content {
+    padding: 16px;
+    font-size: 0.95rem;
+  }
 } 

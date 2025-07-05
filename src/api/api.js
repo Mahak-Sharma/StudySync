@@ -19,13 +19,13 @@ export const saveSummary = async (summary, userId, groupId, filename) => {
 };
 
 export const fetchGroupSummaries = async (groupId) => {
-  const res = await fetch(`http://localhost:5000/summaries?groupId=${groupId}`);
+  const res = await fetch(`http://localhost:5001/summaries?groupId=${groupId}`);
   const data = await res.json();
   return data.summaries;
 };
 
 export const fetchUserSummaries = async (userId) => {
-  const res = await fetch(`http://localhost:5000/summaries?userId=${userId}`);
+  const res = await fetch(`http://localhost:5001/summaries?userId=${userId}`);
   const data = await res.json();
   return data.summaries;
 };
