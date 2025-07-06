@@ -25,9 +25,22 @@ export const fetchGroupSummaries = async (groupId) => {
 };
 
 export const fetchUserSummaries = async (userId) => {
-  const res = await fetch(`http://localhost:5001/summaries?userId=${userId}`);
+  const res = await fetch(`http://localhost:5001/summaries?userId=${userId}&personalOnly=true`);
   const data = await res.json();
   return data.summaries;
+};
+
+export const fetchPersonalSummaries = async (userId) => {
+  const res = await fetch(`http://localhost:5001/summaries?userId=${userId}&personalOnly=true`);
+  const data = await res.json();
+  return data.summaries;
+};
+
+export const deleteSummary = async (summaryId) => {
+  const res = await fetch(`http://localhost:5001/summaries/${summaryId}`, {
+    method: 'DELETE'
+  });
+  return res.json();
 };
 
 // Friend Feature API Calls
