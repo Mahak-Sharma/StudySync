@@ -1,10 +1,10 @@
 import './Dashboard.css';
 import { useNavigate } from 'react-router-dom';
-import { FaUsers, FaFileAlt, FaComments, FaListAlt } from 'react-icons/fa';
+import { FaUsers, FaFileAlt, FaComments, FaListAlt, FaEye } from 'react-icons/fa';
 import React, { useState, useEffect } from 'react';
 import CreateGroupModal from '../components/Groups/CreateGroupModal';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { sendGroupInvite, fetchGroupMembers } from '../api/api';
+import { sendGroupInvite, fetchGroupMembers, fetchPersonalSummaries } from '../api/api';
 import { db } from '../api/firebaseConfig';
 import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { getFriends } from '../api/api';
@@ -23,6 +23,8 @@ const Dashboard = () => {
   const [groupInvites, setGroupInvites] = useState([]);
   const [inviteMessage, setInviteMessage] = useState('');
   const [loadingInvites, setLoadingInvites] = useState(false);
+  const [recentSummaries, setRecentSummaries] = useState([]);
+  const [loadingSummaries, setLoadingSummaries] = useState(false);
 
   // Fetch invites function
   const fetchInvites = async (userId) => {
@@ -46,8 +48,27 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (currentUser) fetchInvites(currentUser.uid);
+    if (currentUser) {
+      fetchInvites(currentUser.uid);
+      fetchRecentSummaries(currentUser.uid);
+    }
   }, [currentUser]);
+
+  // Fetch recent summaries function
+  const fetchRecentSummaries = async (userId) => {
+    // Use the same user ID logic as YourSummaries page
+    const actualUserId = userId || '64S2rM9XFRZtNesIWdxvUxwyBO43';
+    setLoadingSummaries(true);
+    try {
+      const summaries = await fetchPersonalSummaries(actualUserId);
+      // Get only the 3 most recent summaries
+      setRecentSummaries(summaries.slice(0, 3));
+    } catch (error) {
+      console.error('Error fetching summaries:', error);
+      setRecentSummaries([]);
+    }
+    setLoadingSummaries(false);
+  };
 
   const handleInviteResponse = async (inviteId, groupId, accept) => {
     setInviteMessage('');
@@ -136,6 +157,86 @@ const Dashboard = () => {
           </div>
         ))}
       </div>
+      {/* Recent Summaries Section */}
+      {currentUser && (
+        <div style={{ margin: '24px 0', padding: 20, background: '#f7f8fa', borderRadius: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <h3 style={{ color: '#1976d2', fontWeight: 700, margin: 0 }}>Recent Summaries</h3>
+            <button
+              style={{ 
+                padding: '8px 16px', 
+                background: '#1976d2', 
+                color: '#fff', 
+                border: 'none', 
+                borderRadius: 6, 
+                cursor: 'pointer', 
+                fontWeight: 600,
+                fontSize: '0.9rem'
+              }}
+              onClick={() => navigate('/your-summaries')}
+            >
+              <FaEye style={{ marginRight: 8 }} />
+              View All
+            </button>
+          </div>
+          {loadingSummaries ? (
+            <div style={{ textAlign: 'center', padding: 20, color: '#666' }}>Loading summaries...</div>
+          ) : recentSummaries.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 20, color: '#666' }}>
+              No summaries yet. 
+              <button
+                style={{ 
+                  marginLeft: 8, 
+                  padding: '4px 12px', 
+                  background: '#1976d2', 
+                  color: '#fff', 
+                  border: 'none', 
+                  borderRadius: 4, 
+                  cursor: 'pointer', 
+                  fontWeight: 600,
+                  fontSize: '0.9rem'
+                }}
+                onClick={() => navigate('/your-summaries')}
+              >
+                Create your first summary
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gap: 12 }}>
+              {recentSummaries.map((summary) => (
+                <div key={summary.id} style={{ 
+                  background: '#fff', 
+                  padding: 16, 
+                  borderRadius: 8, 
+                  border: '1px solid #e0e0e0',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <strong style={{ color: '#333', fontSize: '1rem' }}>{summary.filename}</strong>
+                    </div>
+                    <span style={{ fontSize: '0.8rem', color: '#666' }}>
+                      {new Date(summary.timestamp).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <p style={{ 
+                    color: '#555', 
+                    fontSize: '0.9rem', 
+                    lineHeight: 1.4, 
+                    margin: 0,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden'
+                  }}>
+                    {summary.summary}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       <CreateGroupModal open={showCreateGroup} onClose={() => setShowCreateGroup(false)} />
     </div>
   );
