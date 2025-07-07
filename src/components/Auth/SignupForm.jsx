@@ -1,5 +1,5 @@
 import './SignupForm.css';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../../api/firebaseConfig';
 import { useNavigate, NavLink } from 'react-router-dom';
@@ -13,6 +13,13 @@ const SignupForm = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.body.classList.add('no-scroll');
+    return () => {
+      document.body.classList.remove('no-scroll');
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,7 +41,7 @@ const SignupForm = () => {
   return (
     <div className="signup-form-container">
       <div className="signup-form-logo">
-        <FaUserPlus size={48} color="#1976d2" style={{ marginBottom: 8 }} />
+        <FaUser size={38} color="#fff" style={{ marginBottom: 8, stroke: '#1976d2', strokeWidth: 2 }} />
       </div>
       <h2 className="signup-form-title">Create your StudySync account</h2>
       <form className="signup-form-fields" onSubmit={handleSubmit}>

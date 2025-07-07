@@ -1,5 +1,5 @@
 import './LoginForm.css';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../api/firebaseConfig';
 import { useNavigate } from 'react-router-dom';
@@ -11,6 +11,13 @@ const LoginForm = () => {
   const [error, setError] = useState('');
   const [showSignup, setShowSignup] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.body.classList.add('no-scroll');
+    return () => {
+      document.body.classList.remove('no-scroll');
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,7 +37,7 @@ const LoginForm = () => {
   return (
     <div className="login-form-container">
       <div className="login-form-logo">
-        <FaSignInAlt size={48} color="#1976d2" style={{ marginBottom: 8 }} />
+        <FaUser size={38} color="#fff" style={{ marginBottom: 8, stroke: '#1976d2', strokeWidth: 2 }} />
       </div>
       <h2 className="login-form-title">Sign in to StudySync</h2>
       <form className="login-form-fields" onSubmit={handleSubmit}>
