@@ -1,18 +1,37 @@
 import './FileUpload.css';
-import { FaDownload } from 'react-icons/fa';
+import { FaDownload, FaFileUpload, FaSpinner, FaCheck, FaTimes } from 'react-icons/fa';
 import React, { useRef, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 
 const API_URL = 'http://localhost:5001'; // Summarization backend runs on port 5001
 
-const FileUpload = ({ groupId = null }) => {
+const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'txt', 'png', 'jpg', 'jpeg', 'bmp', 'tiff'];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+const FileUpload = ({ groupId = null, onSummaryGenerated = null }) => {
   const fileInputRef = useRef();
   const [selectedFile, setSelectedFile] = useState(null);
   const [summary, setSummary] = useState("");
   const [uploadedFilename, setUploadedFilename] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const { user } = useAuth();
+
+  const validateFile = (file) => {
+    // Check file size
+    if (file.size > MAX_FILE_SIZE) {
+      return `File size too large. Maximum size is ${MAX_FILE_SIZE / (1024 * 1024)}MB`;
+    }
+
+    // Check file extension
+    const extension = file.name.split('.').pop().toLowerCase();
+    if (!ALLOWED_EXTENSIONS.includes(extension)) {
+      return `File type not supported. Allowed formats: ${ALLOWED_EXTENSIONS.join(', ').toUpperCase()}`;
+    }
+
+    return null;
+  };
 
   const handleUploadClick = () => {
     fileInputRef.current.click();
@@ -20,36 +39,59 @@ const FileUpload = ({ groupId = null }) => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
+    if (!file) return;
+
+    const validationError = validateFile(file);
+    if (validationError) {
+      setError(validationError);
+      setSelectedFile(null);
+      return;
+    }
+
     setSelectedFile(file);
     setSummary("");
     setUploadedFilename("");
     setError("");
+    setSuccess("");
   };
 
   const handleGenerateSummary = async () => {
     if (!selectedFile) return;
+    
     setLoading(true);
     setSummary("");
     setError("");
+    setSuccess("");
+    
     const formData = new FormData();
     formData.append('file', selectedFile);
-    formData.append('user_id', user ? user.uid : 'demo-user');
+    formData.append('user_id', user ? user.uid : '64S2rM9XFRZtNesIWdxvUxwyBO43');
     formData.append('group_id', groupId);
+    
     try {
       const res = await fetch(`${API_URL}/summarize`, {
         method: 'POST',
         body: formData,
       });
+      
       const data = await res.json();
-      if (res.ok) {
-        setSummary(data.summary);
-        setUploadedFilename(data.filename);
-      } else {
-        setError(data.error || 'Failed to generate summary.');
-      }
+      
+              if (res.ok) {
+          setSummary(data.summary);
+          setUploadedFilename(data.filename);
+          setSuccess('Summary generated successfully!');
+          // Call the callback to notify parent component
+          if (onSummaryGenerated) {
+            onSummaryGenerated();
+          }
+        } else {
+          setError(data.error || 'Failed to generate summary.');
+        }
     } catch (err) {
       setError('Server error. Please try again.');
+      console.error('Upload error:', err);
     }
+    
     setLoading(false);
   };
 
@@ -58,52 +100,124 @@ const FileUpload = ({ groupId = null }) => {
     window.open(`${API_URL}/download/${uploadedFilename}`, '_blank');
   };
 
+  const clearAll = () => {
+    setSelectedFile(null);
+    setSummary("");
+    setUploadedFilename("");
+    setError("");
+    setSuccess("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const getFileIcon = (filename) => {
+    const extension = filename.split('.').pop().toLowerCase();
+    switch (extension) {
+      case 'pdf': return '📄';
+      case 'docx': return '📝';
+      case 'txt': return '📄';
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+      case 'bmp':
+      case 'tiff': return '🖼️';
+      default: return '📁';
+    }
+  };
+
   return (
     <div className="file-upload-container">
-      <h3 className="file-upload-title">Upload File</h3>
+      <h3 className="file-upload-title">Upload File for Summarization</h3>
+      
+      <div className="file-upload-info">
+        <p><strong>Supported formats:</strong> PDF, DOCX, TXT, PNG, JPG, JPEG, BMP, TIFF</p>
+        <p><strong>Maximum file size:</strong> 10MB</p>
+      </div>
+
       <input
         className="file-upload-input"
         type="file"
         ref={fileInputRef}
         style={{ display: 'none' }}
         onChange={handleFileChange}
+        accept={ALLOWED_EXTENSIONS.map(ext => `.${ext}`).join(',')}
       />
+      
       <button
         className="file-upload-button"
         onClick={handleUploadClick}
+        disabled={loading}
       >
-        <FaDownload /> Select File
+        <FaFileUpload /> Select File
       </button>
+
       {selectedFile && (
-        <div style={{ marginTop: 12 }}>
-          <div><b>Selected:</b> {selectedFile.name}</div>
+        <div className="file-selected">
+          <div className="file-info">
+            <span className="file-icon">{getFileIcon(selectedFile.name)}</span>
+            <span className="file-name">{selectedFile.name}</span>
+            <span className="file-size">({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)</span>
+          </div>
+          
+          <div className="file-actions">
+            <button
+              className="file-upload-button primary"
+              onClick={handleGenerateSummary}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <FaSpinner className="spinner" /> Generating Summary...
+                </>
+              ) : (
+                <>
+                  <FaDownload /> Generate Summary
+                </>
+              )}
+            </button>
+            
+            <button
+              className="file-upload-button secondary"
+              onClick={clearAll}
+              disabled={loading}
+            >
+              <FaTimes /> Clear
+            </button>
+          </div>
+        </div>
+      )}
+
+      {success && (
+        <div className="success-message">
+          <FaCheck /> {success}
+        </div>
+      )}
+
+      {error && (
+        <div className="error-message">
+          <FaTimes /> {error}
+        </div>
+      )}
+
+      {uploadedFilename && (
+        <div className="download-section">
           <button
             className="file-upload-button"
-            style={{ marginTop: 10 }}
-            onClick={handleGenerateSummary}
-            disabled={loading}
+            onClick={handleDownload}
           >
-            {loading ? 'Generating...' : 'Generate Summary'}
+            <FaDownload /> Download Original File
           </button>
         </div>
       )}
-      {uploadedFilename && (
-        <button
-          className="file-upload-button"
-          style={{ marginTop: 10 }}
-          onClick={handleDownload}
-        >
-          <FaDownload /> Download File
-        </button>
-      )}
+
       {summary && (
-        <div style={{ marginTop: 18, background: '#f7f8fa', padding: 16, borderRadius: 8, textAlign: 'left' }}>
-          <b>Summary:</b>
-          <div style={{ marginTop: 8 }}>{summary}</div>
+        <div className="summary-section">
+          <h4>Generated Summary:</h4>
+          <div className="summary-content">
+            {summary}
+          </div>
         </div>
-      )}
-      {error && (
-        <div style={{ color: 'red', marginTop: 10 }}>{error}</div>
       )}
     </div>
   );

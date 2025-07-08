@@ -11,6 +11,7 @@ import {
 import "./App.css";
 import Chatbot from "./components/Chatbot/Chatbot";
 import { useAuth } from "./contexts/AuthContext";
+import Navbar from './components/Navbar';
 
 const features = [
   {
@@ -50,80 +51,16 @@ function App() {
   const carouselFeatures = [...features, ...features];
   const { user, loading, logout } = useAuth();
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (user && !loading) {
+      navigate('/dashboard');
+    }
+  }, [user, loading, navigate]);
+
   return (
     <div className="app-root">
-      {/* Navigation Bar */}
-      <nav className="app-navbar">
-        <div className="app-navbar-content">
-          <div className="app-navbar-title">
-            <div className="app-navbar-logo"></div>
-            StudySync
-          </div>
-          <NavLink
-            className={({ isActive }) =>
-              "app-navbar-link" + (isActive ? " active" : "")
-            }
-            to="/dashboard"
-          >
-            Dashboard
-          </NavLink>
-          <NavLink
-            className={({ isActive }) =>
-              "app-navbar-link" + (isActive ? " active" : "")
-            }
-            to="/group"
-          >
-            Group
-          </NavLink>
-          {loading ? null : user ? (
-            <>
-              <NavLink
-                className={({ isActive }) =>
-                  "app-navbar-link" + (isActive ? " active" : "")
-                }
-                to="/profile"
-              >
-                Profile
-              </NavLink>
-              <NavLink
-                className={({ isActive }) =>
-                  "app-navbar-link" + (isActive ? " active" : "")
-                }
-                to="/your-summaries"
-              >
-                Your Summaries
-              </NavLink>
-              <NavLink
-                className={({ isActive }) =>
-                  "app-navbar-link" + (isActive ? " active" : "")
-                }
-                to="/friends"
-              >
-                Friends
-              </NavLink>
-              <button
-                className="app-navbar-link"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1976d2', fontWeight: 600, fontSize: '1em', marginLeft: 12 }}
-                onClick={async () => {
-                  await logout();
-                  navigate('/login');
-                }}
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <NavLink
-              className={({ isActive }) =>
-                "app-navbar-link" + (isActive ? " active" : "")
-              }
-              to="/login"
-            >
-              Login
-            </NavLink>
-          )}
-        </div>
-      </nav>
+      <Navbar />
       {/* Hero Section */}
       <header className="app-hero">
         <div className="app-hero-content">

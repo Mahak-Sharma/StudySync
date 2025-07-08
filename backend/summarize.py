@@ -31,6 +31,24 @@ def extract_text_from_docx(file_obj):
     doc = docx.Document(io.BytesIO(docx_data))
     return "\n".join([para.text for para in doc.paragraphs])
 
+def extract_text_from_txt(file_obj):
+    """Extract text from TXT file object without saving to disk"""
+    # Read the file object into memory
+    txt_data = file_obj.read()
+    file_obj.seek(0)  # Reset file pointer for potential future reads
+    
+    # Try different encodings
+    encodings = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
+    
+    for encoding in encodings:
+        try:
+            return txt_data.decode(encoding)
+        except UnicodeDecodeError:
+            continue
+    
+    # If all encodings fail, try with error handling
+    return txt_data.decode('utf-8', errors='ignore')
+
 def extract_text_from_image(file_obj):
     """Extract text from image file object without saving to disk"""
     # Read the file object into memory
@@ -65,13 +83,28 @@ def extract_text_from_docx_file(file_path):
     doc = docx.Document(file_path)
     return "\n".join([para.text for para in doc.paragraphs])
 
+def extract_text_from_txt_file(file_path):
+    """Legacy function for file paths - kept for compatibility"""
+    encodings = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
+    
+    for encoding in encodings:
+        try:
+            with open(file_path, 'r', encoding=encoding) as f:
+                return f.read()
+        except UnicodeDecodeError:
+            continue
+    
+    # If all encodings fail, try with error handling
+    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+        return f.read()
+
 def extract_text_from_image_file(file_path):
     """Legacy function for file paths - kept for compatibility"""
     image = Image.open(file_path)
     return pytesseract.image_to_string(image)
 
 def main():
-    file_path = input("Enter the file path (.pdf, .docx, image): ").strip()
+    file_path = input("Enter the file path (.pdf, .docx, .txt, image): ").strip()
 
     if not os.path.exists(file_path):
         print("File not found.")
@@ -83,6 +116,8 @@ def main():
         text = extract_text_from_pdf_file(file_path)
     elif ext == ".docx":
         text = extract_text_from_docx_file(file_path)
+    elif ext == ".txt":
+        text = extract_text_from_txt_file(file_path)
     elif ext in [".png", ".jpg", ".jpeg", ".bmp", ".tiff"]:
         text = extract_text_from_image_file(file_path)
     else:
