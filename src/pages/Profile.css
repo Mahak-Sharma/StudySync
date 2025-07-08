@@ -92,4 +92,142 @@
 
 .profile-header {
   /* Add your Profile header styles here */
+}
+
+/* Floating Logout Button */
+.floating-logout-btn {
+  position: fixed;
+  top: 32px;
+  right: 36px;
+  z-index: 1200;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff1744 60%, #ff616f 100%);
+  color: #fff;
+  border: none;
+  box-shadow: 0 8px 32px #ff174488, 0 2px 8px #ff616f44;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  cursor: pointer;
+  transition: box-shadow 0.22s, background 0.22s, transform 0.18s;
+  outline: none;
+}
+
+.floating-logout-btn:hover {
+  box-shadow: 0 12px 40px #ff1744cc, 0 4px 16px #ff616faa;
+  background: linear-gradient(135deg, #ff616f 0%, #ff1744 100%);
+  animation: shake-logout 0.6s;
+}
+
+@keyframes shake-logout {
+  0% { transform: rotate(0deg) scale(1); }
+  15% { transform: rotate(8deg) scale(1.08); }
+  30% { transform: rotate(-8deg) scale(0.96); }
+  45% { transform: rotate(8deg) scale(1.1); }
+  60% { transform: rotate(-8deg) scale(0.95); }
+  75% { transform: rotate(8deg) scale(1.05); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+/* Futuristic Avatar */
+.futuristic-avatar {
+  background: #1976d2;
+  box-shadow: 0 4px 24px #1976d244, 0 1.5px 8px #42a5f588;
+  border: 4px solid #42a5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 2.7rem;
+  margin-bottom: 18px;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  transition: box-shadow 0.22s, border 0.22s;
+  position: relative;
+  overflow: hidden;
+}
+
+.futuristic-avatar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 24px 8px #ffd70055, 0 0 32px 12px #42a5f555, 0 0 0 2px #fff2 inset;
+  pointer-events: none;
+}
+
+/* No hover/focus effect for simple avatar */
+
+/* Floating Groups Card */
+.profile-groups-floating {
+  margin: 36px auto 0 auto;
+  min-width: 260px;
+  max-width: 440px;
+  background: rgba(255,255,255,0.92);
+  box-shadow: 0 8px 32px #1976d244, 0 2px 8px #42a5f588;
+  border-radius: 20px;
+  border: 1.5px solid #e3eafc;
+  padding: 22px 20px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  animation: fadeInUp 1.1s;
+  font-family: 'Poppins', 'Segoe UI', 'Roboto', Arial, sans-serif;
+}
+
+@media (max-width: 700px) {
+  .profile-groups-floating {
+    margin-top: 24px;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Futuristic Profile Card/Container */
+.profile-container {
+  max-width: 440px;
+  margin: 64px auto 0 auto;
+  padding: 36px 18px 54px 18px;
+  background: rgba(255,255,255,0.82);
+  box-shadow: 0 12px 48px #1976d222, 0 2px 8px #42a5f544;
+  backdrop-filter: blur(16px) saturate(1.3);
+  border-radius: 32px;
+  transition: box-shadow 0.25s, background 0.25s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Poppins', 'Segoe UI', 'Roboto', Arial, sans-serif;
+  border: 1.5px solid #e3eafc;
+  position: relative;
+  overflow: visible;
+}
+
+.profile-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(120deg, #f7f8fa 0%, #e3f0ff 100%);
+  border-radius: 24px;
+  box-shadow: 0 4px 24px #1976d210;
+  padding: 32px 0 24px 0;
+  animation: fadeInUp 1.1s;
+  border: 1.5px solid #e3eafc;
+}
+
+/* Futuristic Profile Page Background */
+.profile-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(120deg, #e3f0ff 0%, #b3c6ff 60%, #f7f8fa 100%);
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.4s;
 } 
