@@ -1,0 +1,9 @@
+{
+    "name": "meeting-frontend",
+    "version": "1.0.0",
+    "main": "MeetingRoom.jsx",
+    "dependencies": {
+        "react": "^18.2.0",
+        "socket.io-client": "^4.7.5"
+    }
+}
