@@ -31,10 +31,29 @@ def add_summary(summary, user_id, group_id, filename):
         _save_summaries(summaries)
         return summary_obj
 
-def get_summaries(group_id=None, user_id=None):
+def get_summaries(group_id=None, user_id=None, personal_only=False):
     summaries = _load_summaries()
+    
     if group_id is not None:
-        return [s for s in summaries if s['group_id'] == group_id]
+        # For group pages: show only summaries for this specific group
+        filtered = [s for s in summaries if s['group_id'] == group_id]
+        return filtered
+    
     if user_id is not None:
-        return [s for s in summaries if s['group_id'] is None and s['user_id'] == user_id]
-    return summaries 
+        if personal_only:
+            # For "Your Summaries" page: show only personal summaries (no group_id or null/empty group_id)
+            filtered = [s for s in summaries if s['user_id'] == user_id and 
+                       (s['group_id'] is None or s['group_id'] == '' or s['group_id'] == 'null')]
+        else:
+            # For other contexts: show all summaries for the user
+            filtered = [s for s in summaries if s['user_id'] == user_id]
+        return filtered
+    
+    return summaries
+
+def delete_summary(summary_id):
+    with lock:
+        summaries = _load_summaries()
+        summaries = [s for s in summaries if s['id'] != summary_id]
+        _save_summaries(summaries)
+        return True 
