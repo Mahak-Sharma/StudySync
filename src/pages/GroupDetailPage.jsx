@@ -8,7 +8,7 @@ import { db } from '../api/firebaseConfig';
 import { doc, getDoc, updateDoc, arrayRemove, deleteDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { FaHome, FaTachometerAlt, FaComments, FaFileAlt, FaListAlt, FaBars, FaVideo } from 'react-icons/fa';
-import GroupVideoCallComponent from '../components/VideoCall/GroupVideoCallComponent';
+import MeetingRoom from '../components/MeetingRoom';
 
 const GroupDetailPage = () => {
   const { groupId } = useParams();
@@ -29,7 +29,6 @@ const GroupDetailPage = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [selectedSection, setSelectedSection] = useState('');
   const [fade, setFade] = useState(false);
-  const [groupCallOpen, setGroupCallOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(getAuth(), user => {
@@ -101,8 +100,10 @@ const GroupDetailPage = () => {
       if (!currentUser) return;
       try {
         const frs = await getFriends(currentUser.uid);
+        console.log('Fetched friends:', frs); // Debug output
         setFriends(frs);
       } catch (e) {
+        console.error('Error fetching friends:', e); // Debug output
         setFriends([]);
       }
     };
@@ -188,13 +189,13 @@ const GroupDetailPage = () => {
           <span className="side-panel-icon"><FaTachometerAlt /></span>
           {!collapsed && <span className="side-panel-label">Dashboard</span>}
         </button>
-        <button className={`side-panel-btn${selectedSection === 'groupchat' ? ' active' : ''}`} onClick={() => handleSectionChange('chat')}>
+        <button className={`side-panel-btn${selectedSection === 'chat' ? ' active' : ''}`} onClick={() => handleSectionChange('chat')}>
           <span className="side-panel-icon"><FaComments /></span>
           {!collapsed && <span className="side-panel-label">Group Chat</span>}
         </button>
-        <button className="side-panel-btn" onClick={() => setGroupCallOpen(true)}>
+        <button className={`side-panel-btn${selectedSection === 'meeting' ? ' active' : ''}`} onClick={() => handleSectionChange('meeting')}>
           <span className="side-panel-icon"><FaVideo /></span>
-          {!collapsed && <span className="side-panel-label">Group Video Call</span>}
+          {!collapsed && <span className="side-panel-label">Meeting</span>}
         </button>
         <button className={`side-panel-btn${selectedSection === 'files' ? ' active' : ''}`} onClick={() => handleSectionChange('files')}>
           <span className="side-panel-icon"><FaFileAlt /></span>
@@ -328,6 +329,12 @@ const GroupDetailPage = () => {
           <div style={{ marginBottom: 32 }}>
             <h3 style={{ color: '#1976d2', fontWeight: 700 }}>Todo List</h3>
             <TodoBoard groupId={groupId} />
+          </div>
+        )}
+        {selectedSection === 'meeting' && (
+          <div style={{ marginBottom: 32 }}>
+            <h3 style={{ color: '#1976d2', fontWeight: 700 }}>Group Meeting</h3>
+            <MeetingRoom groupId={groupId} userName={currentUser?.displayName || currentUser?.email || 'Anonymous'} />
           </div>
         )}
       </div>

@@ -35,7 +35,7 @@ const VideoCallComponent = ({ isOpen, onClose, friendId, friendName }) => {
         if (isOpen && user) {
             initializeSocket();
             setupMediaStream();
-            
+
             // Check for pending calls from global context
             const pendingCall = getPendingCall();
             if (pendingCall && pendingCall.from === friendId) {
@@ -66,13 +66,13 @@ const VideoCallComponent = ({ isOpen, onClose, friendId, friendName }) => {
     }, [remoteStream, remoteVideoRef]);
 
     const initializeSocket = () => {
-        socketRef.current = io('http://localhost:5002'); // Video call server port
+        socketRef.current = io('http://localhost:5001'); // Video call server port
 
         socketRef.current.on('connect', () => {
             console.log('Connected to video call server');
-            socketRef.current.emit('user-ready', { 
+            socketRef.current.emit('user-ready', {
                 username: user.uid,
-                displayName: user.displayName || user.email 
+                displayName: user.displayName || user.email
             });
         });
 
@@ -131,10 +131,10 @@ const VideoCallComponent = ({ isOpen, onClose, friendId, friendName }) => {
                 video: true,
                 audio: true
             });
-            
+
             localStreamRef.current = stream;
             setLocalStream(stream);
-            
+
             if (localVideoRef.current) {
                 localVideoRef.current.srcObject = stream;
             }
@@ -197,12 +197,12 @@ const VideoCallComponent = ({ isOpen, onClose, friendId, friendName }) => {
             setIsCallActive(true);
             createPeerConnection();
             setShowIncomingModal(false);
-            
+
             // Create and send offer to the caller
             try {
                 const offer = await peerConnectionRef.current.createOffer();
                 await peerConnectionRef.current.setLocalDescription(offer);
-                
+
                 socketRef.current.emit('offer', {
                     to: incomingCall.from,
                     from: user.uid,
@@ -230,11 +230,11 @@ const VideoCallComponent = ({ isOpen, onClose, friendId, friendName }) => {
             if (!peerConnectionRef.current) {
                 createPeerConnection();
             }
-            
+
             await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
             const answer = await peerConnectionRef.current.createAnswer();
             await peerConnectionRef.current.setLocalDescription(answer);
-            
+
             // Send answer to the person who sent the offer
             const offerFrom = offer.from || friendId;
             socketRef.current.emit('answer', {
@@ -357,7 +357,7 @@ const VideoCallComponent = ({ isOpen, onClose, friendId, friendName }) => {
 
                     <div className="call-controls">
                         {callStatus === 'idle' && (
-                            <button 
+                            <button
                                 className="call-btn start-call"
                                 onClick={startCall}
                             >
@@ -368,7 +368,7 @@ const VideoCallComponent = ({ isOpen, onClose, friendId, friendName }) => {
                         {callStatus === 'calling' && (
                             <div className="calling-status">
                                 <p>Calling {friendName}...</p>
-                                <button 
+                                <button
                                     className="call-btn end-call"
                                     onClick={endCall}
                                 >
@@ -379,19 +379,19 @@ const VideoCallComponent = ({ isOpen, onClose, friendId, friendName }) => {
 
                         {callStatus === 'connected' && (
                             <div className="call-controls-active">
-                                <button 
+                                <button
                                     className={`control-btn ${isMuted ? 'muted' : ''}`}
                                     onClick={toggleMute}
                                 >
                                     {isMuted ? '🔇' : '🔊'}
                                 </button>
-                                <button 
+                                <button
                                     className={`control-btn ${isVideoOff ? 'video-off' : ''}`}
                                     onClick={toggleVideo}
                                 >
                                     {isVideoOff ? '📷' : '📹'}
                                 </button>
-                                <button 
+                                <button
                                     className="call-btn end-call"
                                     onClick={endCall}
                                 >
@@ -403,7 +403,7 @@ const VideoCallComponent = ({ isOpen, onClose, friendId, friendName }) => {
                         {callStatus === 'ended' && (
                             <div className="call-ended">
                                 <p>Call ended</p>
-                                <button 
+                                <button
                                     className="call-btn start-call"
                                     onClick={startCall}
                                 >
