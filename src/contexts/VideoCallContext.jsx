@@ -32,8 +32,8 @@ export const VideoCallProvider = ({ children }) => {
   useEffect(() => {
     if (!user) return;
     if (socketRef.current) return;
-    
-    socketRef.current = io('http://localhost:5002');
+
+    socketRef.current = io('http://localhost:5001');
     socketRef.current.on('connect', () => {
       socketRef.current.emit('user-ready', {
         username: user.uid,
@@ -44,10 +44,10 @@ export const VideoCallProvider = ({ children }) => {
     // Listen for incoming calls
     socketRef.current.on('call-request', (data) => {
       console.log('Global incoming call:', data);
-      setIncomingCall({ 
-        from: data.from, 
+      setIncomingCall({
+        from: data.from,
         fromName: data.fromName,
-        groupId: data.groupId 
+        groupId: data.groupId
       });
       setShowIncomingModal(true);
     });
@@ -208,11 +208,11 @@ export const VideoCallProvider = ({ children }) => {
       if (!peerConnectionRef.current) {
         createPeerConnection();
       }
-      
+
       await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
       const answer = await peerConnectionRef.current.createAnswer();
       await peerConnectionRef.current.setLocalDescription(answer);
-      
+
       socketRef.current.emit('answer', {
         to: activeCall.friendId,
         from: user.uid,
@@ -356,7 +356,7 @@ export const VideoCallProvider = ({ children }) => {
     try {
       const offer = await peerConnectionRef.current.createOffer();
       await peerConnectionRef.current.setLocalDescription(offer);
-      
+
       socketRef.current.emit('offer', {
         to: incomingCall.from,
         from: user.uid,
@@ -403,9 +403,9 @@ export const VideoCallProvider = ({ children }) => {
 
     if (socketRef.current && activeCall) {
       if (activeCall.type === 'group') {
-        socketRef.current.emit('leave-room', { 
-          roomId: activeCall.groupId, 
-          userId: user.uid 
+        socketRef.current.emit('leave-room', {
+          roomId: activeCall.groupId,
+          userId: user.uid
         });
       } else {
         socketRef.current.emit('call-ended', {
