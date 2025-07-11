@@ -8,19 +8,36 @@ const ChatBox = ({ groupId }) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
 
   // Fetch messages for this group
   useEffect(() => {
-    if (!groupId) return;
-    const q = query(
-      collection(db, 'groups', groupId, 'messages'),
-      orderBy('createdAt', 'asc')
-    );
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setMessages(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    });
-    return () => unsubscribe();
+    if (!groupId) {
+      setError("No group selected.");
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const q = query(
+        collection(db, 'groups', groupId, 'messages'),
+        orderBy('createdAt', 'asc')
+      );
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        setMessages(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        setLoading(false);
+      }, (err) => {
+        setError("Failed to load messages: " + err.message);
+        setLoading(false);
+      });
+      return () => unsubscribe();
+    } catch (err) {
+      setError("Error: " + err.message);
+      setLoading(false);
+    }
   }, [groupId]);
 
   // Scroll to bottom on new messages
@@ -31,14 +48,25 @@ const ChatBox = ({ groupId }) => {
   const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim() || !user) return;
-    await addDoc(collection(db, 'groups', groupId, 'messages'), {
-      text: input,
-      userId: user.uid,
-      userName: user.displayName || user.email,
-      createdAt: serverTimestamp(),
-    });
-    setInput("");
+    try {
+      await addDoc(collection(db, 'groups', groupId, 'messages'), {
+        text: input,
+        userId: user.uid,
+        userName: user.displayName || user.email,
+        createdAt: serverTimestamp(),
+      });
+      setInput("");
+    } catch (err) {
+      setError("Failed to send message: " + err.message);
+    }
   };
+
+  if (error) {
+    return <div className="chat-box-container"><div style={{color:'red',padding:16}}>{error}</div></div>;
+  }
+  if (loading) {
+    return <div className="chat-box-container"><div>Loading chat...</div></div>;
+  }
 
   return (
     <div className="chat-box-container">
