@@ -78,7 +78,7 @@ const MeetingRoom = ({ groupId, userName }) => {
       // For each existing user (except self), create a peer connection and offer
       list.forEach(({ id, name }) => {
         if (id !== socket.id && !peerConnections.current[id]) {
-          createPeerConnection(id, name, true);
+          createPeerConnection(id, name, true); // Existing users: send offer
         }
       });
     });
@@ -90,7 +90,8 @@ const MeetingRoom = ({ groupId, userName }) => {
         return [...prev, { id, name }];
       });
       if (id !== socket.id && !peerConnections.current[id]) {
-        createPeerConnection(id, name, false);
+        // Both sides create a peer connection and send an offer
+        createPeerConnection(id, name, true);
       }
     });
 
@@ -163,7 +164,10 @@ const MeetingRoom = ({ groupId, userName }) => {
     if (localStream.current) {
       localStream.current
         .getTracks()
-        .forEach((track) => pc.addTrack(track, localStream.current));
+        .forEach((track) => {
+          console.log('Adding local track to', peerId, track.kind, track);
+          pc.addTrack(track, localStream.current);
+        });
     }
 
     // ICE
@@ -176,8 +180,15 @@ const MeetingRoom = ({ groupId, userName }) => {
       }
     };
 
+    // ICE connection state debugging
+    pc.oniceconnectionstatechange = () => {
+      console.log('ICE connection state with', peerId, ':', pc.iceConnectionState);
+    };
+
     // Track
     pc.ontrack = (event) => {
+      console.log('Received remote track from', peerId, event.track.kind, event.track);
+      console.log('All remote tracks:', event.streams[0].getTracks());
       setPeerStreams((prev) => {
         // Only add if not already present
         if (prev.some((p) => p.id === peerId))
