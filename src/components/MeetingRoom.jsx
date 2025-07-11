@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import io from 'socket.io-client';
 
 // const SERVER_URL = 'https://studysync-enqu.onrender.com'; // Change to your backend IP for cross-device
-const SERVER_URL = 'https://studysync-enqu.onrender.com'; // Use deployed backend for video calls
+const SERVER_URL = 'https://studysync-enqu.onrender.com'; // Use secure WebSocket for deployed backend
 
 const MeetingRoom = ({ groupId, userName }) => {
     const [joined, setJoined] = useState(false);
@@ -18,7 +18,7 @@ const MeetingRoom = ({ groupId, userName }) => {
 
     // Connect socket
     useEffect(() => {
-        socketRef.current = io(SERVER_URL);
+        socketRef.current = io(SERVER_URL, { transports: ['websocket'] });
         return () => {
             socketRef.current.disconnect();
         };
@@ -117,7 +117,14 @@ const MeetingRoom = ({ groupId, userName }) => {
 
     // Create peer connection
     function createPeerConnection(peerId, peerName, isInitiator) {
-        const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+        const pc = new RTCPeerConnection({
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                // Free public TURN server for testing (do not use in production)
+                { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' }
+            ]
+        });
         peerConnections.current[peerId] = pc;
 
         // Add local tracks
