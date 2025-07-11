@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import io from 'socket.io-client';
 
-const SERVER_URL = 'https://studysync-enqu.onrender.com'; // Change to your backend IP for cross-device
+// const SERVER_URL = 'https://studysync-enqu.onrender.com'; // Change to your backend IP for cross-device
+const SERVER_URL = 'http://localhost:5002/'; // Change to your backend IP for cross-device
 
 const MeetingRoom = ({ groupId, userName }) => {
     const [joined, setJoined] = useState(false);

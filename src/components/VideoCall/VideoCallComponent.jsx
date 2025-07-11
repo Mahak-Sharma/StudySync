@@ -66,7 +66,7 @@ const VideoCallComponent = ({ isOpen, onClose, friendId, friendName }) => {
     }, [remoteStream, remoteVideoRef]);
 
     const initializeSocket = () => {
-        socketRef.current = io('http://localhost:5001'); // Video call server port
+        socketRef.current = io('http://localhost:5002'); // Video call server port
 
         socketRef.current.on('connect', () => {
             console.log('Connected to video call server');
