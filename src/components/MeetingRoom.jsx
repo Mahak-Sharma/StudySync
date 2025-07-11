@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import io from 'socket.io-client';
 
-// const SERVER_URL = 'https://studysync-enqu.onrender.com'; // Change to your backend IP for cross-device
-const SERVER_URL = 'https://studysync-enqu.onrender.com'; // Use secure WebSocket for deployed backend
+// Set SERVER_URL from environment variable for easy switching between local, cloud, and VS Code Forwarded URL
+const SERVER_URL = import.meta.env.VITE_VIDEO_CALL_SERVER_URL || 'http://localhost:5002';
+// Example: For VS Code Forwarded Port, set VITE_VIDEO_CALL_SERVER_URL to the public URL provided by VS Code
 
 const MeetingRoom = ({ groupId, userName }) => {
     const [joined, setJoined] = useState(false);
@@ -117,14 +118,7 @@ const MeetingRoom = ({ groupId, userName }) => {
 
     // Create peer connection
     function createPeerConnection(peerId, peerName, isInitiator) {
-        const pc = new RTCPeerConnection({
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' },
-                // Free public TURN server for testing (do not use in production)
-                { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' }
-            ]
-        });
+        const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
         peerConnections.current[peerId] = pc;
 
         // Add local tracks
