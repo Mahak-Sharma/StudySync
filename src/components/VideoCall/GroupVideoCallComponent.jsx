@@ -9,6 +9,8 @@ const GroupVideoCallComponent = ({ isOpen, onClose, groupId, groupName }) => {
     const [error, setError] = useState('');
 
     const localVideoRef = useRef(null);
+    // Add a ref object to store refs for each remote participant
+    const remoteVideoRefs = useRef({});
 
     useEffect(() => {
         if (isOpen && user && groupId && !activeCall) {
@@ -28,6 +30,20 @@ const GroupVideoCallComponent = ({ isOpen, onClose, groupId, groupName }) => {
             localVideoRef.current.play?.();
         }
     }, [localStream, localVideoRef]);
+
+    // Ensure remote videos get their streams
+    useEffect(() => {
+        groupParticipants.forEach(participant => {
+            if (
+                participant.stream &&
+                remoteVideoRefs.current[participant.userId] &&
+                remoteVideoRefs.current[participant.userId].current
+            ) {
+                remoteVideoRefs.current[participant.userId].current.srcObject = participant.stream;
+                remoteVideoRefs.current[participant.userId].current.play?.();
+            }
+        });
+    }, [groupParticipants]);
 
     if (!isOpen || !activeCall || activeCall.type !== 'group') return null;
 
@@ -71,25 +87,32 @@ const GroupVideoCallComponent = ({ isOpen, onClose, groupId, groupName }) => {
                         </div>
 
                         {/* Remote participants */}
-                        {groupParticipants.map(participant => (
-                            <div key={participant.userId} className="remote-video-container">
-                                {participant.stream ? (
-                                    <video
-                                        autoPlay
-                                        playsInline
-                                        className="remote-video"
-                                        srcObject={participant.stream}
-                                    />
-                                ) : (
-                                    <div className="no-video">
-                                        <p>Connecting...</p>
+                        {groupParticipants.map(participant => {
+                            // Create a ref for each participant if it doesn't exist
+                            if (!remoteVideoRefs.current[participant.userId]) {
+                                remoteVideoRefs.current[participant.userId] = React.createRef();
+                            }
+                            return (
+                                <div key={participant.userId} className="remote-video-container">
+                                    {participant.stream ? (
+                                        <video
+                                            ref={remoteVideoRefs.current[participant.userId]}
+                                            autoPlay
+                                            playsInline
+                                            className="remote-video"
+                                            // srcObject is set via ref and useEffect
+                                        />
+                                    ) : (
+                                        <div className="no-video">
+                                            <p>Connecting...</p>
+                                        </div>
+                                    )}
+                                    <div style={{ textAlign: 'center', color: '#1976d2', fontWeight: 600, fontSize: '0.95rem', marginTop: 4 }}>
+                                        {participant.displayName || participant.userId}
                                     </div>
-                                )}
-                                <div style={{ textAlign: 'center', color: '#1976d2', fontWeight: 600, fontSize: '0.95rem', marginTop: 4 }}>
-                                    {participant.displayName || participant.userId}
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
 
                         {/* Empty slots for waiting */}
                         {groupParticipants.length === 0 && (
