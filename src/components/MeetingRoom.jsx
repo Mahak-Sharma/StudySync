@@ -18,6 +18,8 @@ const MeetingRoom = ({ groupId, userName }) => {
   const socketRef = useRef();
   const peerConnections = useRef({});
   const localStream = useRef();
+  // Add a ref object to store refs for each remote participant
+  const remoteVideoRefs = useRef({});
 
   // Connect socket
   useEffect(() => {
@@ -47,6 +49,20 @@ const MeetingRoom = ({ groupId, userName }) => {
       localVideoRef.current.srcObject = localStream.current;
     }
   }, [joined]);
+
+  // Ensure remote videos get their streams
+  useEffect(() => {
+    peerStreams.forEach(peer => {
+      if (
+        peer.stream &&
+        remoteVideoRefs.current[peer.id] &&
+        remoteVideoRefs.current[peer.id].current
+      ) {
+        remoteVideoRefs.current[peer.id].current.srcObject = peer.stream;
+        remoteVideoRefs.current[peer.id].current.play?.();
+      }
+    });
+  }, [peerStreams]);
 
   // Handle participants and signaling
   useEffect(() => {
@@ -268,19 +284,14 @@ const MeetingRoom = ({ groupId, userName }) => {
   };
 
   return (
-    <div>
+    <div className="meeting-room">
       <h2>Meeting Room: {groupId}</h2>
       {!joined ? (
         <button onClick={joinRoom}>Join Meeting</button>
       ) : (
         <div>
-          <video
-            ref={localVideoRef}
-            autoPlay
-            muted
-            playsInline
-            style={{ width: 240, border: "2px solid #1976d2", borderRadius: 8 }}
-          />
+          {/* Local video */}
+          <video ref={localVideoRef} autoPlay muted playsInline className="local-video" />
           <div>
             <button onClick={toggleMic}>
               {micOn ? "Mute Mic" : "Unmute Mic"}
@@ -317,55 +328,52 @@ const MeetingRoom = ({ groupId, userName }) => {
               </li>
             ))}
           </ul>
+          {/* Remote videos */}
           <div style={{ display: "flex", gap: 16 }}>
-            {peerStreams.map((p) => (
-              <div key={p.id} style={{ position: "relative" }}>
-                <video
-                  autoPlay
-                  playsInline
-                  ref={(el) => {
-                    if (el) el.srcObject = p.stream;
-                  }}
-                  style={{
-                    width: 180,
-                    border: "1px solid #888",
-                    borderRadius: 8,
-                    background: "#000",
-                  }}
-                  onLoadedMetadata={(e) => {
-                    if (!p.stream.getVideoTracks().length)
-                      e.target.style.background = "#000";
-                  }}
-                />
-                {/* Black overlay if no video track */}
-                {!p.stream.getVideoTracks().length && (
+            {peerStreams.map(peer => {
+              // Create a ref for each peer if it doesn't exist
+              if (!remoteVideoRefs.current[peer.id]) {
+                remoteVideoRefs.current[peer.id] = React.createRef();
+              }
+              return (
+                <div key={peer.id} style={{ position: "relative" }}>
+                  <video
+                    ref={remoteVideoRefs.current[peer.id]}
+                    autoPlay
+                    playsInline
+                    className="remote-video"
+                    // srcObject is set via ref and useEffect
+                  />
+                  {/* Black overlay if no video track */}
+                  {!peer.stream.getVideoTracks().length && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        background: "#000",
+                      }}
+                    />
+                  )}
                   <div
                     style={{
                       position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "100%",
-                      height: "100%",
-                      background: "#000",
+                      bottom: 4,
+                      left: 4,
+                      color: "#fff",
+                      background: "rgba(0,0,0,0.5)",
+                      padding: "2px 8px",
+                      borderRadius: 4,
+                      fontSize: 12,
                     }}
-                  />
-                )}
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: 4,
-                    left: 4,
-                    color: "#fff",
-                    background: "rgba(0,0,0,0.5)",
-                    padding: "2px 8px",
-                    borderRadius: 4,
-                    fontSize: 12,
-                  }}
-                >
-                  {p.name}
+                  >
+                    {peer.name}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
