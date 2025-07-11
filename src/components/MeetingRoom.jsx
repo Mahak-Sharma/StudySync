@@ -75,10 +75,11 @@ const MeetingRoom = ({ groupId, userName }) => {
     // Receive full participant list
     socket.on("participants", (list) => {
       setParticipants(list);
-      // For each existing user (except self), create a peer connection and offer
+      // For each existing user (except self), create a peer connection and offer if our socket.id is lower
       list.forEach(({ id, name }) => {
         if (id !== socket.id && !peerConnections.current[id]) {
-          createPeerConnection(id, name, true); // Existing users: send offer
+          const shouldInitiate = socket.id < id; // Only the peer with lower socket.id sends the offer
+          createPeerConnection(id, name, shouldInitiate);
         }
       });
     });
@@ -90,8 +91,9 @@ const MeetingRoom = ({ groupId, userName }) => {
         return [...prev, { id, name }];
       });
       if (id !== socket.id && !peerConnections.current[id]) {
-        // Both sides create a peer connection and send an offer
-        createPeerConnection(id, name, true);
+        // Both sides create a peer connection, but only the one with lower socket.id sends the offer
+        const shouldInitiate = socket.id < id;
+        createPeerConnection(id, name, shouldInitiate);
       }
     });
 
