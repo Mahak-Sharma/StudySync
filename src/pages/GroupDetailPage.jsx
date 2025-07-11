@@ -9,6 +9,7 @@ import { doc, getDoc, updateDoc, arrayRemove, deleteDoc } from 'firebase/firesto
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { FaHome, FaTachometerAlt, FaComments, FaFileAlt, FaListAlt, FaBars, FaVideo } from 'react-icons/fa';
 import MeetingRoom from '../components/MeetingRoom';
+import GroupVideoCallComponent from '../components/VideoCall/GroupVideoCallComponent';
 
 const GroupDetailPage = () => {
   const { groupId } = useParams();
@@ -29,6 +30,7 @@ const GroupDetailPage = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [selectedSection, setSelectedSection] = useState('');
   const [fade, setFade] = useState(false);
+  const [groupCallOpen, setGroupCallOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(getAuth(), user => {
