@@ -33,7 +33,7 @@ export const VideoCallProvider = ({ children }) => {
     if (!user) return;
     if (socketRef.current) return;
 
-    socketRef.current = io('http://localhost:5001');
+    socketRef.current = io('http://localhost:5002');
     socketRef.current.on('connect', () => {
       socketRef.current.emit('user-ready', {
         username: user.uid,

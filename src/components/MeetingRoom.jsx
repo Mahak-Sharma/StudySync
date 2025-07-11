@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 
-const SERVER_URL = "wss://studysync-enqu.onrender.com/"; // Change to your backend IP for cross-device
+// Set SERVER_URL from environment variable for easy switching between local, cloud, and VS Code Forwarded URL
+const SERVER_URL = import.meta.env.VITE_VIDEO_CALL_SERVER_URL || 'http://localhost:5002';
+// Example: For VS Code Forwarded Port, set VITE_VIDEO_CALL_SERVER_URL to the public URL provided by VS Code
 
 const MeetingRoom = ({ groupId, userName }) => {
   const [joined, setJoined] = useState(false);
@@ -17,7 +19,7 @@ const MeetingRoom = ({ groupId, userName }) => {
 
   // Connect socket
   useEffect(() => {
-    socketRef.current = io(SERVER_URL);
+    socketRef.current = io(SERVER_URL, { transports: ['websocket'] });
     return () => {
       socketRef.current.disconnect();
     };
