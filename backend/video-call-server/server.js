@@ -8,13 +8,22 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
     cors: {
-        origin: "http://localhost:5173", // StudySync frontend
+        origin: [
+            "http://localhost:5173",
+            "https://studysync-enqu.onrender.com"
+        ], // Allow both local and hosted frontend
         methods: ["GET", "POST"]
     }
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: [
+        "http://localhost:5173",
+        "https://studysync-enqu.onrender.com"
+    ],
+    credentials: true
+}));
 app.use(express.json());
 
 // Store active users and their socket connections
