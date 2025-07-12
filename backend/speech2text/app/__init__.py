@@ -12,5 +12,9 @@ def create_app():
     @app.route('/api/health')
     def health():
         return 'OK', 200
+    
+    @app.route('/health')
+    def health_check():
+        return {'status': 'healthy', 'service': 'speech2text'}, 200
 
     return app

@@ -12,15 +12,17 @@ app.use(cors({
     origin: [
         "http://localhost:5173",
         "http://localhost:5174",
-        "https://studysync-enqu.onrender.com"
+        "https://studysync-enqu.onrender.com",
+        "https://studysync-3435a.web.app",
+        "https://studysync-3435a.firebaseapp.com"
     ],
     credentials: true
 }));
 app.use(express.json());
 
-// Create PeerJS server
+// Create PeerJS server - attach to the main HTTP server
 const peerServer = PeerServer({
-    port: process.env.PEER_SERVER_PORT || 9000,
+    server: server, // Attach to the existing HTTP server
     path: '/peerjs',
     allow_discovery: true,
     proxied: process.env.NODE_ENV === 'production',
@@ -28,7 +30,9 @@ const peerServer = PeerServer({
         origin: [
             "http://localhost:5173",
             "http://localhost:5174",
-            "https://studysync-enqu.onrender.com"
+            "https://studysync-enqu.onrender.com",
+            "https://studysync-3435a.web.app",
+            "https://studysync-3435a.firebaseapp.com"
         ],
         credentials: true
     }

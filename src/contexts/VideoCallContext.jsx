@@ -39,7 +39,7 @@ export const VideoCallProvider = ({ children }) => {
       host: host,
       port: import.meta.env.VITE_PEER_SERVER_PORT || 443, // Use standard HTTPS port
       path: '/peerjs',
-      secure: import.meta.env.VITE_PEER_SERVER_SECURE === 'true' || import.meta.env.PROD,
+      secure: true, // Always use secure for production
       config: {
         iceServers: [
           { urls: "stun:stun.l.google.com:19302" },
