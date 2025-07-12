@@ -32,34 +32,14 @@ export const VideoCallProvider = ({ children }) => {
     // Create a unique peer ID for this user
     const peerId = `user-${user.uid}-${Date.now()}`;
     
-    // Clean up host URL - remove protocol if present
-    const host = (import.meta.env.VITE_PEER_SERVER_HOST || 'studysync-enqu.onrender.com').replace(/^https?:\/\//, '');
+        // Temporary: Use public PeerJS server for testing
+    console.log('🔧 Using public PeerJS server for testing');
     
     peerRef.current = new Peer(peerId, {
-      host: host,
-      port: import.meta.env.VITE_PEER_SERVER_PORT || 443, // Use standard HTTPS port
+      host: 'peerjs-server.herokuapp.com',
+      port: 443,
       path: '/peerjs',
-      secure: import.meta.env.VITE_PEER_SERVER_SECURE === 'true' || import.meta.env.PROD,
-      config: {
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:19302" },
-          { urls: "stun:stun2.l.google.com:19302" },
-          { urls: "stun:stun3.l.google.com:19302" },
-          { urls: "stun:stun4.l.google.com:19302" },
-          {
-            urls: "turn:openrelay.metered.ca:80",
-            username: "openrelayproject",
-            credential: "openrelayproject"
-          },
-          {
-            urls: "turn:openrelay.metered.ca:443",
-            username: "openrelayproject",
-            credential: "openrelayproject"
-          }
-        ]
-      }
-    });
+      secure: true,
 
     peerRef.current.on('open', (id) => {
       console.log('✅ Global PeerJS connected with ID:', id);
