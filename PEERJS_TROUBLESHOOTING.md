@@ -6,22 +6,21 @@
 
 **Error Message:**
 ```
-WebSocket connection to 'ws://localhost:9000/peerjs/peerjs?key=peerjs&id=...' failed
+WebSocket connection to 'wss://studysync-meeting.onrender.com/peerjs/peerjs?key=peerjs&id=...' failed
 ```
 
 **Solution:**
-1. **Start the PeerJS Server:**
-   ```bash
-   # Windows
-   start-peerjs.bat
-   
-   # Unix/Linux/Mac
-   chmod +x start-peerjs.sh
-   ./start-peerjs.sh
-   
-   # Or manually
-   cd groups/meeting/backend
-   node peer-server.js
+1. **Check Render Deployment:**
+   - Ensure the PeerJS server is deployed on Render at `studysync-meeting.onrender.com`
+   - Check if the Render service is running and healthy
+   - Verify the service is accessible at the correct URL
+
+2. **Environment Variables:**
+   - Ensure your `.env` file has the correct PeerJS server configuration:
+   ```env
+   VITE_PEER_SERVER_HOST=studysync-meeting.onrender.com
+   VITE_PEER_SERVER_PORT=443
+   VITE_PEER_SERVER_SECURE=true
    ```
 
 2. **Check if server is running:**
