@@ -24,6 +24,106 @@ function AnimatedRoutes() {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
+        <Route path="/" element={
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <App />
+          </motion.div>
+        } />
+        <Route path="/dashboard" element={
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Dashboard />
+          </motion.div>
+        } />
+        <Route path="/group/:groupId" element={
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <GroupDetailPage />
+          </motion.div>
+        } />
+        <Route path="/group" element={
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <GroupPage />
+          </motion.div>
+        } />
+        <Route path="/files" element={
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <FileList />
+          </motion.div>
+        } />
+        <Route path="/chat" element={
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ChatBox />
+          </motion.div>
+        } />
+        <Route path="/todo" element={
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <TodoBoard />
+          </motion.div>
+        } />
+        <Route path="/profile" element={
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Profile />
+          </motion.div>
+        } />
+        <Route path="/your-summaries" element={
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <YourSummaries />
+          </motion.div>
+        } />
+        <Route path="/friends" element={
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <FriendsPage />
+          </motion.div>
+        } />
         <Route path="/signup" element={
           <motion.div
             initial={{ opacity: 0, x: 80, scale: 0.98 }}
@@ -56,18 +156,6 @@ createRoot(document.getElementById('root')).render(
     <AuthProvider>
       <VideoCallProvider>
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<App />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/group/:groupId" element={<GroupDetailPage />} />
-            <Route path="/group" element={<GroupPage />} />
-            <Route path="/files" element={<FileList />} />
-            <Route path="/chat" element={<ChatBox />} />
-            <Route path="/todo" element={<TodoBoard />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/your-summaries" element={<YourSummaries />} />
-            <Route path="/friends" element={<FriendsPage />} />
-          </Routes>
           <AnimatedRoutes />
           <div style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 1000 }}>
             <Chatbot />
