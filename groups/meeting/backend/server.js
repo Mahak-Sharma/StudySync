@@ -16,9 +16,9 @@ app.use(cors({
     credentials: true
 }));
 
-// Create PeerJS server
+// Create PeerJS server - attach to the same HTTP server
 const peerServer = PeerServer({
-    port: process.env.PORT || 5003, // Use the same port as the main server
+    server: server, // Attach to the existing HTTP server
     path: '/peerjs',
     allow_discovery: true,
     proxied: process.env.NODE_ENV === 'production',
