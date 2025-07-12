@@ -261,7 +261,7 @@ function startMeetingServer() {
 // Function to start the PeerJS server
 function startPeerServer() {
     console.log('🔗 Starting PeerJS server...');
-    const peerServerPath = join(__dirname, 'backend');
+    const peerServerPath = join(__dirname, 'groups', 'meeting', 'backend');
     const peerServer = spawn('node', ['peer-server.js'], {
         cwd: peerServerPath,
         shell: true,
