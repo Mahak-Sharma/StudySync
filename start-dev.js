@@ -258,6 +258,39 @@ function startMeetingServer() {
     return meetingServer;
 }
 
+// Function to start the PeerJS server
+function startPeerServer() {
+    console.log('🔗 Starting PeerJS server...');
+    const peerServerPath = join(__dirname, 'backend');
+    const peerServer = spawn('node', ['peer-server.js'], {
+        cwd: peerServerPath,
+        shell: true,
+        stdio: 'pipe',
+        env: {
+            ...process.env,
+            PEER_SERVER_PORT: '9000' // PeerJS server on port 9000
+        }
+    });
+
+    peerServer.stdout.on('data', (data) => {
+        console.log(`🔗 PeerJS Server: ${data.toString().trim()}`);
+    });
+
+    peerServer.stderr.on('data', (data) => {
+        console.error(`❌ PeerJS Server Error: ${data.toString().trim()}`);
+    });
+
+    peerServer.on('close', (code) => {
+        console.log(`🔴 PeerJS Server process exited with code ${code}`);
+    });
+
+    peerServer.on('error', (error) => {
+        console.error(`💥 PeerJS Server failed to start: ${error.message}`);
+    });
+
+    return peerServer;
+}
+
 // Handle graceful shutdown
 function handleShutdown(processes) {
     console.log('\n🛑 Shutting down all services...');
@@ -305,11 +338,17 @@ async function startAllServices() {
             processes.push(meetingServerProcess);
         }, 6000);
         
+        // Wait a bit more, then start PeerJS server (port 9000)
+        setTimeout(() => {
+            const peerServerProcess = startPeerServer();
+            processes.push(peerServerProcess);
+        }, 8000);
+        
         // Wait a bit more, then start frontend
         setTimeout(() => {
             const frontendProcess = startFrontend();
             processes.push(frontendProcess);
-        }, 8000);
+        }, 10000);
         
         // Handle process termination
         process.on('SIGINT', () => handleShutdown(processes));

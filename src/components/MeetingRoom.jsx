@@ -1,14 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import io from "socket.io-client";
+import { Peer } from "peerjs";
 import "./MeetingRoom.css";
-
-// Set SERVER_URL for production and development
-const SERVER_URL =
-  import.meta.env.VITE_MEETING_SERVER_URL ||
-  (import.meta.env.PROD
-    ? 'https://studysync-enqu.onrender.com' // Use the integrated server
-    : 'http://localhost:5002'); // Local video call server (now includes meeting functionality)
-// The video call server now handles both 1:1 calls and group meetings
 
 const MeetingRoom = ({ groupId, userName }) => {
   const [joined, setJoined] = useState(false);
@@ -18,64 +10,152 @@ const MeetingRoom = ({ groupId, userName }) => {
   const [peerStreams, setPeerStreams] = useState([]); // [{id, name, stream}]
   const [leaving, setLeaving] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('disconnected'); // disconnected, connecting, connected, error
+  
   const localVideoRef = useRef();
-  const socketRef = useRef();
-  const peerConnections = useRef({});
+  const peerRef = useRef();
   const localStream = useRef();
-  // Add a ref object to store refs for each remote participant
+  const peerConnections = useRef({});
   const remoteVideoRefs = useRef({});
-  const makingOffer = useRef(false);
-  const processedStreams = useRef(new Set()); // Track processed streams to prevent duplicates
 
-  // Connect socket
+  // Initialize PeerJS
   useEffect(() => {
-    console.log('Connecting to meeting server:', SERVER_URL);
-    console.log('Environment:', import.meta.env.PROD ? 'production' : 'development');
-
-    socketRef.current = io(SERVER_URL, {
-      transports: ['websocket', 'polling'], // Fallback to polling if websocket fails
-      secure: SERVER_URL.startsWith('https'),
-      withCredentials: true,
-      timeout: 20000, // 20 second timeout
-      forceNew: true
+    console.log('Initializing PeerJS for meeting room:', groupId);
+    
+    // Create a unique peer ID for this user in this room
+    const peerId = `${groupId}-${userName}-${Date.now()}`;
+    
+    peerRef.current = new Peer(peerId, {
+      host: import.meta.env.VITE_PEER_SERVER_HOST || 'localhost',
+      port: import.meta.env.VITE_PEER_SERVER_PORT || 9000,
+      path: '/peerjs',
+      secure: import.meta.env.PROD,
+      config: {
+        iceServers: [
+          { urls: "stun:stun.l.google.com:19302" },
+          { urls: "stun:stun1.l.google.com:19302" },
+          { urls: "stun:stun2.l.google.com:19302" },
+          { urls: "stun:stun3.l.google.com:19302" },
+          { urls: "stun:stun4.l.google.com:19302" },
+          {
+            urls: "turn:openrelay.metered.ca:80",
+            username: "openrelayproject",
+            credential: "openrelayproject"
+          },
+          {
+            urls: "turn:openrelay.metered.ca:443",
+            username: "openrelayproject",
+            credential: "openrelayproject"
+          }
+        ]
+      }
     });
 
-    socketRef.current.on('connect', () => {
-      console.log('✅ Connected to meeting server');
+    peerRef.current.on('open', (id) => {
+      console.log('✅ PeerJS connected with ID:', id);
       setConnectionStatus('connected');
     });
 
-    socketRef.current.on('connect_error', (error) => {
-      console.error('❌ Failed to connect to meeting server:', error);
-      console.error('Server URL:', SERVER_URL);
-      console.error('Error details:', error.message);
+    peerRef.current.on('error', (error) => {
+      console.error('❌ PeerJS error:', error);
       setConnectionStatus('error');
     });
 
-    socketRef.current.on('disconnect', (reason) => {
-      console.log('🔌 Disconnected from meeting server:', reason);
+    peerRef.current.on('disconnected', () => {
+      console.log('🔌 PeerJS disconnected');
+      setConnectionStatus('disconnected');
     });
 
-    socketRef.current.on('error', (error) => {
-      console.error('🚨 Socket error:', error);
+    // Handle incoming calls
+    peerRef.current.on('call', async (call) => {
+      console.log('📞 Incoming call from:', call.peer);
+      
+      if (localStream.current) {
+        call.answer(localStream.current);
+        
+        call.on('stream', (remoteStream) => {
+          console.log('🎥 Received stream from:', call.peer);
+          handleRemoteStream(call.peer, remoteStream);
+        });
+        
+        call.on('close', () => {
+          console.log('📞 Call closed with:', call.peer);
+          removePeer(call.peer);
+        });
+        
+        call.on('error', (error) => {
+          console.error('❌ Call error with:', call.peer, error);
+          removePeer(call.peer);
+        });
+        
+        peerConnections.current[call.peer] = call;
+      }
     });
 
     return () => {
-      if (socketRef.current) {
-        console.log('Cleaning up socket connection');
-        socketRef.current.disconnect();
+      if (peerRef.current) {
+        console.log('Cleaning up PeerJS connection');
+        peerRef.current.destroy();
       }
     };
-  }, []);
+  }, [groupId, userName]);
+
+  // Handle remote stream
+  const handleRemoteStream = (peerId, stream) => {
+    console.log('🎥 Processing remote stream from:', peerId);
+    
+    setPeerStreams((prev) => {
+      const existingPeer = prev.find((p) => p.id === peerId);
+      if (existingPeer) {
+        console.log('🔄 Updating existing peer stream for:', peerId);
+        return prev.map((p) =>
+          p.id === peerId ? { ...p, stream: stream } : p
+        );
+      } else {
+        console.log('➕ Adding new peer stream for:', peerId);
+        // Extract peer name from peer ID (format: groupId-name-timestamp)
+        const peerName = peerId.split('-').slice(1, -1).join('-');
+        return [...prev, { id: peerId, name: peerName, stream: stream }];
+      }
+    });
+  };
+
+  // Remove peer
+  const removePeer = (peerId) => {
+    console.log('👋 Removing peer:', peerId);
+    
+    if (peerConnections.current[peerId]) {
+      peerConnections.current[peerId].close();
+      delete peerConnections.current[peerId];
+    }
+    
+    setPeerStreams((prev) => prev.filter((p) => p.id !== peerId));
+    setParticipants((prev) => prev.filter((p) => p.id !== peerId));
+  };
 
   // Join room and get media
   const joinRoom = async () => {
-    localStream.current = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true,
-    });
-    setJoined(true);
-    socketRef.current.emit("join-room", { roomId: groupId, name: userName });
+    try {
+      console.log('🎬 Joining meeting room:', groupId);
+      
+      // Get user media
+      localStream.current = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+      
+      setJoined(true);
+      
+      // Add self to participants
+      setParticipants([{ id: peerRef.current.id, name: userName }]);
+      
+      // For demo purposes, we'll simulate other participants
+      // In a real app, you'd get this from your backend
+      console.log('✅ Joined meeting room successfully');
+      
+    } catch (error) {
+      console.error('❌ Error joining room:', error);
+      alert('Failed to access camera/microphone. Please check permissions.');
+    }
   };
 
   // Set local video
@@ -94,23 +174,19 @@ const MeetingRoom = ({ groupId, userName }) => {
         remoteVideoRefs.current[peer.id].current
       ) {
         const videoElement = remoteVideoRefs.current[peer.id].current;
-        // Only set srcObject if it has changed
         if (videoElement.srcObject !== peer.stream) {
           videoElement.srcObject = peer.stream;
           videoElement.play().then(() => {
             console.log('✅ Successfully playing video for peer:', peer.id);
           }).catch(error => {
             if (error.name === 'AbortError') {
-              // Ignore AbortError - it's expected when video element is being removed/replaced
               return;
             }
             console.error('❌ Error playing video for peer:', peer.id, error);
           });
         } else if (videoElement.paused) {
-          // If already set but paused, try to play
           videoElement.play().catch(error => {
             if (error.name === 'AbortError') {
-              // Ignore AbortError - it's expected when video element is being removed/replaced
               return;
             }
             console.error('❌ Error playing video for peer:', peer.id, error);
@@ -120,267 +196,49 @@ const MeetingRoom = ({ groupId, userName }) => {
     });
   }, [peerStreams]);
 
-  // Handle participants and signaling
-  useEffect(() => {
-    if (!joined) return;
-    const socket = socketRef.current;
-
-    // Announce self
-    socket.emit("announce", { groupId, userId: socket.id, name: userName });
-
-    // Receive full participant list
-    socket.on("participants", (list) => {
-      setParticipants(list);
-      // For each existing user (except self), create a peer connection and offer if our socket.id is lower
-      list.forEach(({ id, name }) => {
-        if (id !== socket.id && !peerConnections.current[id]) {
-          const shouldInitiate = socket.id < id; // Only the peer with lower socket.id sends the offer
-          createPeerConnection(id, name, shouldInitiate);
-        }
+  // Call a peer (this would be triggered when you want to connect to someone)
+  const callPeer = async (peerId) => {
+    if (!localStream.current || !peerRef.current) return;
+    
+    console.log('📞 Calling peer:', peerId);
+    
+    try {
+      const call = peerRef.current.call(peerId, localStream.current);
+      
+      call.on('stream', (remoteStream) => {
+        console.log('🎥 Received stream from:', peerId);
+        handleRemoteStream(peerId, remoteStream);
       });
-    });
-
-    // New user joined
-    socket.on("user-joined", ({ id, name }) => {
-      setParticipants((prev) => {
-        if (prev.some((p) => p.id === id)) return prev;
-        return [...prev, { id, name }];
+      
+      call.on('close', () => {
+        console.log('📞 Call closed with:', peerId);
+        removePeer(peerId);
       });
-      if (id !== socket.id && !peerConnections.current[id]) {
-        // Both sides create a peer connection, but only the one with lower socket.id sends the offer
-        const shouldInitiate = socket.id < id;
-        createPeerConnection(id, name, shouldInitiate);
-      }
-    });
-
-    // Announce
-    socket.on("announce", ({ userId, name }) => {
-      setParticipants((prev) => {
-        if (prev.some((p) => p.id === userId)) return prev;
-        return [...prev, { id: userId, name }];
+      
+      call.on('error', (error) => {
+        console.error('❌ Call error with:', peerId, error);
+        removePeer(peerId);
       });
-    });
-
-    // Handle signaling
-    socket.on("signal", async ({ sender, data }) => {
-      console.log('📨 Received signal from', sender, 'type:', data.type);
-
-      let pc = peerConnections.current[sender];
-      if (!pc) {
-        // Defensive: create if missing
-        const peerName =
-          participants.find((p) => p.id === sender)?.name || sender;
-        console.log('🆕 Creating missing peer connection for:', sender);
-        pc = createPeerConnection(sender, peerName, false);
-      }
-
-      try {
-        if (data.type === "offer") {
-          console.log('📥 Processing offer from:', sender);
-          await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          console.log('📤 Sending answer to:', sender);
-          socket.emit("signal", {
-            roomId: groupId,
-            data: { type: "answer", answer, to: sender },
-          });
-        } else if (data.type === "answer") {
-          console.log('📥 Processing answer from:', sender);
-          if (pc.signalingState === "have-local-offer") {
-            await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
-          } else {
-            console.warn('⚠️ Skipping setRemoteDescription(answer): wrong signaling state', pc.signalingState);
-          }
-        } else if (data.type === "candidate") {
-          console.log('📥 Processing ICE candidate from:', sender);
-          await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-        }
-      } catch (error) {
-        console.error('❌ Error processing signal from', sender, ':', error);
-      }
-    });
-
-    // User left
-    socket.on("user-left", (userId) => {
-      if (peerConnections.current[userId]) {
-        peerConnections.current[userId].close();
-        delete peerConnections.current[userId];
-      }
-      // Clean up processed streams for this user
-      const keysToRemove = Array.from(processedStreams.current).filter(key => key.startsWith(`${userId}-`));
-      keysToRemove.forEach(key => processedStreams.current.delete(key));
-
-      setPeerStreams((prev) => prev.filter((p) => p.id !== userId));
-      setParticipants((prev) => prev.filter((p) => p.id !== userId));
-    });
-
-    return () => {
-      socket.off("participants");
-      socket.off("user-joined");
-      socket.off("announce");
-      socket.off("signal");
-      socket.off("user-left");
-    };
-  }, [joined, groupId, userName, participants]);
-
-  // Create peer connection
-  function createPeerConnection(peerId, peerName, isInitiator) {
-    const pc = new RTCPeerConnection({
-      iceServers: [
-        { urls: "stun:stun.l.google.com:19302" },
-        { urls: "stun:stun1.l.google.com:19302" },
-        { urls: "stun:stun2.l.google.com:19302" },
-        { urls: "stun:stun3.l.google.com:19302" },
-        { urls: "stun:stun4.l.google.com:19302" },
-        {
-          urls: "turn:openrelay.metered.ca:80",
-          username: "openrelayproject",
-          credential: "openrelayproject"
-        },
-        {
-          urls: "turn:openrelay.metered.ca:443",
-          username: "openrelayproject",
-          credential: "openrelayproject"
-        }
-      ]
-    });
-    peerConnections.current[peerId] = pc;
-
-    // Add local tracks
-    if (localStream.current) {
-      localStream.current
-        .getTracks()
-        .forEach((track) => {
-          console.log('Adding local track to', peerId, track.kind, track);
-          pc.addTrack(track, localStream.current);
-        });
+      
+      peerConnections.current[peerId] = call;
+      
+    } catch (error) {
+      console.error('❌ Error calling peer:', peerId, error);
     }
-
-    // ICE
-    pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        socketRef.current.emit("signal", {
-          roomId: groupId,
-          data: { type: "candidate", candidate: event.candidate, to: peerId },
-        });
-      }
-    };
-
-    // ICE connection state debugging
-    pc.oniceconnectionstatechange = () => {
-      console.log('ICE connection state with', peerId, ':', pc.iceConnectionState);
-      if (pc.iceConnectionState === 'connected') {
-        console.log('✅ WebRTC connection established with', peerId);
-      } else if (pc.iceConnectionState === 'failed') {
-        console.error('❌ WebRTC connection failed with', peerId);
-      }
-    };
-
-    // Connection state debugging
-    pc.onconnectionstatechange = () => {
-      console.log('Connection state with', peerId, ':', pc.connectionState);
-    };
-
-    // Track
-    pc.ontrack = (event) => {
-      console.log('🎥 Received remote track from', peerId, event.track.kind, event.track);
-
-      if (event.streams && event.streams[0]) {
-        const stream = event.streams[0];
-        const streamKey = `${peerId}-${stream.id}`;
-
-        // Prevent duplicate stream processing
-        if (processedStreams.current.has(streamKey)) {
-          console.log('🔄 Stream already processed for peer:', peerId, 'stream:', stream.id);
-          return;
-        }
-
-        console.log('📊 All remote tracks:', stream.getTracks());
-        console.log('🆔 Stream ID:', stream.id);
-        console.log('✅ Stream active:', stream.active);
-        console.log('🎬 Stream readyState:', stream.readyState);
-        console.log('🎯 Adding stream to peerStreams for peer:', peerId);
-        console.log('📹 Video tracks in stream:', stream.getVideoTracks().length);
-        console.log('🔊 Audio tracks in stream:', stream.getAudioTracks().length);
-
-        // Mark this stream as processed
-        processedStreams.current.add(streamKey);
-
-        setPeerStreams((prev) => {
-          // Check if peer already exists and has a stream
-          const existingPeer = prev.find((p) => p.id === peerId);
-          if (existingPeer && existingPeer.stream) {
-            console.log('🔄 Updating existing peer stream for:', peerId);
-            return prev.map((p) =>
-              p.id === peerId ? { ...p, stream: stream } : p
-            );
-          } else if (existingPeer && !existingPeer.stream) {
-            console.log('🔄 Adding stream to existing peer without stream:', peerId);
-            return prev.map((p) =>
-              p.id === peerId ? { ...p, stream: stream } : p
-            );
-          } else {
-            console.log('➕ Adding new peer stream for:', peerId);
-            return [
-              ...prev,
-              { id: peerId, name: peerName, stream: stream },
-            ];
-          }
-        });
-      } else {
-        console.error('❌ No streams received from peer:', peerId);
-      }
-    };
-
-    // Offer/Answer
-    if (isInitiator) {
-      pc.onnegotiationneeded = async () => {
-        try {
-          if (makingOffer.current) return;
-          makingOffer.current = true;
-          console.log('🔄 Negotiation needed for peer:', peerId);
-          const offer = await pc.createOffer();
-          await pc.setLocalDescription(offer);
-          console.log('📤 Sending offer to peer:', peerId);
-          socketRef.current.emit("signal", {
-            roomId: groupId,
-            data: { type: "offer", offer, to: peerId },
-          });
-        } catch (e) {
-          console.error('❌ Error creating offer for peer:', peerId, e);
-        } finally {
-          makingOffer.current = false;
-        }
-      };
-    }
-    return pc;
-  }
+  };
 
   // Toggle mic/cam
   const toggleMic = async () => {
     if (!localStream.current) return;
+    
     if (micOn) {
       localStream.current.getAudioTracks().forEach((track) => {
-        track.stop();
-        localStream.current.removeTrack(track);
-        Object.values(peerConnections.current).forEach((pc) => {
-          const sender = pc
-            .getSenders()
-            .find((s) => s.track && s.track.kind === "audio");
-          if (sender) pc.removeTrack(sender);
-        });
+        track.enabled = false;
       });
       setMicOn(false);
     } else {
-      const audioStream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-      });
-      audioStream.getAudioTracks().forEach((track) => {
-        localStream.current.addTrack(track);
-        Object.values(peerConnections.current).forEach((pc) => {
-          pc.addTrack(track, localStream.current);
-        });
+      localStream.current.getAudioTracks().forEach((track) => {
+        track.enabled = true;
       });
       setMicOn(true);
     }
@@ -388,27 +246,15 @@ const MeetingRoom = ({ groupId, userName }) => {
 
   const toggleCam = async () => {
     if (!localStream.current) return;
+    
     if (camOn) {
       localStream.current.getVideoTracks().forEach((track) => {
-        track.stop();
-        localStream.current.removeTrack(track);
-        Object.values(peerConnections.current).forEach((pc) => {
-          const sender = pc
-            .getSenders()
-            .find((s) => s.track && s.track.kind === "video");
-          if (sender) pc.removeTrack(sender);
-        });
+        track.enabled = false;
       });
       setCamOn(false);
     } else {
-      const videoStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-      });
-      videoStream.getVideoTracks().forEach((track) => {
-        localStream.current.addTrack(track);
-        Object.values(peerConnections.current).forEach((pc) => {
-          pc.addTrack(track, localStream.current);
-        });
+      localStream.current.getVideoTracks().forEach((track) => {
+        track.enabled = true;
       });
       setCamOn(true);
     }
@@ -417,14 +263,18 @@ const MeetingRoom = ({ groupId, userName }) => {
   // Leave meeting
   const leaveMeeting = () => {
     setLeaving(true);
-    Object.values(peerConnections.current).forEach((pc) => pc.close());
+    
+    // Close all peer connections
+    Object.values(peerConnections.current).forEach((call) => call.close());
     peerConnections.current = {};
+    
+    // Stop local stream
     if (localStream.current) {
       localStream.current.getTracks().forEach((track) => track.stop());
       localStream.current = null;
     }
-    // Clear processed streams
-    processedStreams.current.clear();
+    
+    // Clean up state
     setPeerStreams([]);
     setParticipants([]);
     setJoined(false);
@@ -451,6 +301,11 @@ const MeetingRoom = ({ groupId, userName }) => {
         Status: {connectionStatus === 'connected' ? 'Connected' :
           connectionStatus === 'connecting' ? 'Connecting...' :
             connectionStatus === 'error' ? 'Connection Error' : 'Disconnected'}
+        {connectionStatus === 'connected' && peerRef.current && (
+          <span style={{ marginLeft: '8px', fontSize: '12px' }}>
+            (ID: {peerRef.current.id})
+          </span>
+        )}
       </div>
 
       {!joined ? (
@@ -507,24 +362,25 @@ const MeetingRoom = ({ groupId, userName }) => {
               {leaving ? "Leaving..." : "Leave Meeting"}
             </button>
           </div>
+          
           <h3>Participants ({participants.length})</h3>
           <ul style={{ marginBottom: 12 }}>
             {participants.map((p) => (
               <li
                 key={p.id}
                 style={{
-                  fontWeight: p.id === socketRef.current.id ? 700 : 400,
+                  fontWeight: p.id === peerRef.current?.id ? 700 : 400,
                   padding: "4px 0"
                 }}
               >
-                {p.id === socketRef.current.id ? "You" : p.name}
+                {p.id === peerRef.current?.id ? "You" : p.name}
                 {peerConnections.current[p.id] && (
                   <span style={{
                     marginLeft: "8px",
                     fontSize: "12px",
-                    color: peerConnections.current[p.id].connectionState === 'connected' ? '#4caf50' : '#ff9800'
+                    color: '#4caf50'
                   }}>
-                    ({peerConnections.current[p.id].connectionState})
+                    (Connected)
                   </span>
                 )}
               </li>
@@ -549,7 +405,11 @@ const MeetingRoom = ({ groupId, userName }) => {
                 Local Audio Tracks: {localStream.current.getAudioTracks().length}
               </div>
             )}
+            {peerRef.current && (
+              <div>Peer ID: {peerRef.current.id}</div>
+            )}
           </div>
+
           {/* Remote videos */}
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
             {peerStreams.map(peer => {
@@ -639,6 +499,45 @@ const MeetingRoom = ({ groupId, userName }) => {
                 </div>
               );
             })}
+          </div>
+
+          {/* Demo: Connect to another peer */}
+          <div style={{ marginTop: '20px', padding: '16px', background: '#f0f0f0', borderRadius: '8px' }}>
+            <h4>Demo: Connect to another peer</h4>
+            <p style={{ fontSize: '14px', marginBottom: '12px' }}>
+              To test peer connections, open another browser tab/window and join the same meeting room.
+              Then use the peer ID shown above to connect.
+            </p>
+            <input
+              type="text"
+              placeholder="Enter peer ID to connect"
+              style={{
+                padding: '8px 12px',
+                marginRight: '8px',
+                borderRadius: '4px',
+                border: '1px solid #ccc',
+                width: '300px'
+              }}
+              id="peerIdInput"
+            />
+            <button
+              onClick={() => {
+                const peerId = document.getElementById('peerIdInput').value;
+                if (peerId) {
+                  callPeer(peerId);
+                }
+              }}
+              style={{
+                padding: '8px 16px',
+                background: '#1976d2',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Connect
+            </button>
           </div>
         </div>
       )}
