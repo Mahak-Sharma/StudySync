@@ -99,9 +99,7 @@ function App() {
           </div>
         </div>
       </section>
-      <div style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 1000 }}>
-        <Chatbot />
-      </div>
+
     </div>
   );
 }
