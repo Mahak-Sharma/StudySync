@@ -33,10 +33,10 @@ export const VideoCallProvider = ({ children }) => {
     const peerId = `user-${user.uid}-${Date.now()}`;
 
     // Temporary: Use public PeerJS server for testing
-    console.log('🔧 Using public PeerJS server for testing');
+    console.log('🔧 Using Render backend for PeerJS signaling');
 
     peerRef.current = new Peer(peerId, {
-      host: 'peerjs-server.herokuapp.com',
+      host: 'studysync-enqu.onrender.com',
       port: 443,
       path: '/peerjs',
       secure: true,
