@@ -100,11 +100,19 @@ const MeetingRoom = ({ groupId, userName }) => {
           videoElement.play().then(() => {
             console.log('✅ Successfully playing video for peer:', peer.id);
           }).catch(error => {
+            if (error.name === 'AbortError') {
+              // Ignore AbortError - it's expected when video element is being removed/replaced
+              return;
+            }
             console.error('❌ Error playing video for peer:', peer.id, error);
           });
         } else if (videoElement.paused) {
           // If already set but paused, try to play
           videoElement.play().catch(error => {
+            if (error.name === 'AbortError') {
+              // Ignore AbortError - it's expected when video element is being removed/replaced
+              return;
+            }
             console.error('❌ Error playing video for peer:', peer.id, error);
           });
         }
@@ -300,9 +308,15 @@ const MeetingRoom = ({ groupId, userName }) => {
         processedStreams.current.add(streamKey);
 
         setPeerStreams((prev) => {
-          // Only add if not already present
-          if (prev.some((p) => p.id === peerId)) {
+          // Check if peer already exists and has a stream
+          const existingPeer = prev.find((p) => p.id === peerId);
+          if (existingPeer && existingPeer.stream) {
             console.log('🔄 Updating existing peer stream for:', peerId);
+            return prev.map((p) =>
+              p.id === peerId ? { ...p, stream: stream } : p
+            );
+          } else if (existingPeer && !existingPeer.stream) {
+            console.log('🔄 Adding stream to existing peer without stream:', peerId);
             return prev.map((p) =>
               p.id === peerId ? { ...p, stream: stream } : p
             );
