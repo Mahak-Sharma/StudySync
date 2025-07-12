@@ -25,6 +25,7 @@ const MeetingRoom = ({ groupId, userName }) => {
   // Add a ref object to store refs for each remote participant
   const remoteVideoRefs = useRef({});
   const makingOffer = useRef(false);
+  const processedStreams = useRef(new Set()); // Track processed streams to prevent duplicates
 
   // Connect socket
   useEffect(() => {
@@ -198,6 +199,10 @@ const MeetingRoom = ({ groupId, userName }) => {
         peerConnections.current[userId].close();
         delete peerConnections.current[userId];
       }
+      // Clean up processed streams for this user
+      const keysToRemove = Array.from(processedStreams.current).filter(key => key.startsWith(`${userId}-`));
+      keysToRemove.forEach(key => processedStreams.current.delete(key));
+
       setPeerStreams((prev) => prev.filter((p) => p.id !== userId));
       setParticipants((prev) => prev.filter((p) => p.id !== userId));
     });
@@ -216,8 +221,17 @@ const MeetingRoom = ({ groupId, userName }) => {
     const pc = new RTCPeerConnection({
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" },
+        { urls: "stun:stun2.l.google.com:19302" },
+        { urls: "stun:stun3.l.google.com:19302" },
+        { urls: "stun:stun4.l.google.com:19302" },
         {
           urls: "turn:openrelay.metered.ca:80",
+          username: "openrelayproject",
+          credential: "openrelayproject"
+        },
+        {
+          urls: "turn:openrelay.metered.ca:443",
           username: "openrelayproject",
           credential: "openrelayproject"
         }
@@ -263,16 +277,27 @@ const MeetingRoom = ({ groupId, userName }) => {
     // Track
     pc.ontrack = (event) => {
       console.log('🎥 Received remote track from', peerId, event.track.kind, event.track);
-      console.log('📊 All remote tracks:', event.streams[0].getTracks());
-      console.log('🆔 Stream ID:', event.streams[0].id);
-      console.log('✅ Stream active:', event.streams[0].active);
-      console.log('🎬 Stream readyState:', event.streams[0].readyState);
 
       if (event.streams && event.streams[0]) {
         const stream = event.streams[0];
+        const streamKey = `${peerId}-${stream.id}`;
+
+        // Prevent duplicate stream processing
+        if (processedStreams.current.has(streamKey)) {
+          console.log('🔄 Stream already processed for peer:', peerId, 'stream:', stream.id);
+          return;
+        }
+
+        console.log('📊 All remote tracks:', stream.getTracks());
+        console.log('🆔 Stream ID:', stream.id);
+        console.log('✅ Stream active:', stream.active);
+        console.log('🎬 Stream readyState:', stream.readyState);
         console.log('🎯 Adding stream to peerStreams for peer:', peerId);
         console.log('📹 Video tracks in stream:', stream.getVideoTracks().length);
         console.log('🔊 Audio tracks in stream:', stream.getAudioTracks().length);
+
+        // Mark this stream as processed
+        processedStreams.current.add(streamKey);
 
         setPeerStreams((prev) => {
           // Only add if not already present
@@ -384,6 +409,8 @@ const MeetingRoom = ({ groupId, userName }) => {
       localStream.current.getTracks().forEach((track) => track.stop());
       localStream.current = null;
     }
+    // Clear processed streams
+    processedStreams.current.clear();
     setPeerStreams([]);
     setParticipants([]);
     setJoined(false);
