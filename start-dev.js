@@ -338,11 +338,8 @@ async function startAllServices() {
             processes.push(meetingServerProcess);
         }, 6000);
         
-        // Wait a bit more, then start PeerJS server (port 9000)
-        setTimeout(() => {
-            const peerServerProcess = startPeerServer();
-            processes.push(peerServerProcess);
-        }, 8000);
+        // Note: PeerJS server is deployed on Render, not started locally
+        // The frontend will connect to: studysync-meeting.onrender.com:443
         
         // Wait a bit more, then start frontend
         setTimeout(() => {
