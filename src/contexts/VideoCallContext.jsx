@@ -66,6 +66,21 @@ export const VideoCallProvider = ({ children }) => {
     peerRef.current.on('error', (error) => {
       console.error('❌ Global PeerJS error:', error);
       setConnectionStatus('error');
+      
+      // Handle specific error types
+      if (error.type === 'peer-unavailable') {
+        console.log('⚠️ Peer is unavailable');
+      } else if (error.type === 'network') {
+        console.log('⚠️ Network error, attempting to reconnect...');
+        // Try to reconnect after a delay
+        setTimeout(() => {
+          if (peerRef.current) {
+            peerRef.current.reconnect();
+          }
+        }, 5000);
+      } else if (error.type === 'server-error') {
+        console.log('⚠️ Server error, check if PeerJS server is running');
+      }
     });
 
     peerRef.current.on('disconnected', () => {
