@@ -225,6 +225,39 @@ function startFrontend() {
     return frontend;
 }
 
+// Function to start the meeting server (Node.js/Socket.IO for group meetings)
+function startMeetingServer() {
+    console.log('🤝 Starting meeting server...');
+    const meetingPath = join(__dirname, 'groups', 'meeting', 'backend');
+    const meetingServer = spawn('node', ['server.js'], {
+        cwd: meetingPath,
+        shell: true,
+        stdio: 'pipe',
+        env: {
+            ...process.env,
+            PORT: '5003' // Meeting server on port 5003
+        }
+    });
+
+    meetingServer.stdout.on('data', (data) => {
+        console.log(`🤝 Meeting Server: ${data.toString().trim()}`);
+    });
+
+    meetingServer.stderr.on('data', (data) => {
+        console.error(`❌ Meeting Server Error: ${data.toString().trim()}`);
+    });
+
+    meetingServer.on('close', (code) => {
+        console.log(`🔴 Meeting Server process exited with code ${code}`);
+    });
+
+    meetingServer.on('error', (error) => {
+        console.error(`💥 Meeting Server failed to start: ${error.message}`);
+    });
+
+    return meetingServer;
+}
+
 // Handle graceful shutdown
 function handleShutdown(processes) {
     console.log('\n🛑 Shutting down all services...');
@@ -266,11 +299,17 @@ async function startAllServices() {
             processes.push(summarizationBackendProcess);
         }, 4000);
         
+        // Wait a bit more, then start meeting server (port 5003)
+        setTimeout(() => {
+            const meetingServerProcess = startMeetingServer();
+            processes.push(meetingServerProcess);
+        }, 6000);
+        
         // Wait a bit more, then start frontend
         setTimeout(() => {
             const frontendProcess = startFrontend();
             processes.push(frontendProcess);
-        }, 6000);
+        }, 8000);
         
         // Handle process termination
         process.on('SIGINT', () => handleShutdown(processes));

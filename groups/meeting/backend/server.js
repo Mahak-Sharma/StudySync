@@ -7,12 +7,24 @@ const app = express();
 const server = http.createServer(app);
 
 // Enable CORS for all origins (for demo/cross-device)
-app.use(cors());
+app.use(cors({
+    origin: [
+        "http://localhost:5173",
+        "https://studysync-enqu.onrender.com",
+        "https://studysync-frontend.onrender.com"
+    ],
+    credentials: true
+}));
 
 const io = new Server(server, {
     cors: {
-        origin: '*',
-        methods: ['GET', 'POST']
+        origin: [
+            "http://localhost:5173",
+            "https://studysync-enqu.onrender.com",
+            "https://studysync-frontend.onrender.com"
+        ],
+        methods: ["GET", "POST"],
+        credentials: true
     }
 });
 
@@ -23,6 +35,7 @@ io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
     socket.on('join-room', ({ roomId, name }) => {
+        console.log(`User ${name} (${socket.id}) joining room ${roomId}`);
         socket.join(roomId);
         if (!rooms[roomId]) rooms[roomId] = new Set();
         if (!roomNames[roomId]) roomNames[roomId] = {};
@@ -35,6 +48,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('announce', ({ groupId, userId, name }) => {
+        console.log(`User ${name} (${userId}) announcing in group ${groupId}`);
         if (!rooms[groupId]) rooms[groupId] = new Set();
         if (!roomNames[groupId]) roomNames[groupId] = {};
         rooms[groupId].add(userId);
@@ -44,10 +58,12 @@ io.on('connection', (socket) => {
     });
 
     socket.on('signal', ({ roomId, data }) => {
+        console.log(`Signal from ${socket.id} in room ${roomId}:`, data.type);
         socket.to(roomId).emit('signal', { sender: socket.id, data });
     });
 
     socket.on('disconnecting', () => {
+        console.log(`User ${socket.id} disconnecting from rooms:`, Array.from(socket.rooms));
         for (const roomId of socket.rooms) {
             if (roomId !== socket.id) {
                 socket.to(roomId).emit('user-left', socket.id);
@@ -63,7 +79,17 @@ io.on('connection', (socket) => {
     });
 });
 
-const PORT = process.env.PORT || 5001;
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        rooms: Object.keys(rooms).length,
+        timestamp: Date.now()
+    });
+});
+
+const PORT = process.env.PORT || 5003;
 server.listen(PORT, () => {
     console.log(`Meeting backend running on port ${PORT}`);
+    console.log(`CORS enabled for: localhost:5173, studysync-enqu.onrender.com, studysync-frontend.onrender.com`);
 }); 
