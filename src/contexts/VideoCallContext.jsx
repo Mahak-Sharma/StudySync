@@ -33,8 +33,8 @@ export const VideoCallProvider = ({ children }) => {
     const peerId = `user-${user.uid}-${Date.now()}`;
     
     peerRef.current = new Peer(peerId, {
-      host: import.meta.env.VITE_PEER_SERVER_HOST || 'studysync-meeting.onrender.com',
-      port: import.meta.env.VITE_PEER_SERVER_PORT || 443,
+      host: import.meta.env.VITE_PEER_SERVER_HOST || 'studysync-enqu.onrender.com',
+      port: import.meta.env.VITE_PEER_SERVER_PORT || 9000,
       path: '/peerjs',
       secure: import.meta.env.VITE_PEER_SERVER_SECURE === 'true' || import.meta.env.PROD,
       config: {
