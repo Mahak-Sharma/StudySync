@@ -1,7 +1,7 @@
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
-const { Server } = require('socket.io');
+const { PeerServer } = require('peer');
 
 const app = express();
 const server = http.createServer(app);
@@ -16,80 +16,118 @@ app.use(cors({
     credentials: true
 }));
 
-const io = new Server(server, {
+// Create PeerJS server
+const peerServer = PeerServer({
+    port: process.env.PEER_SERVER_PORT || 9000,
+    path: '/peerjs',
+    allow_discovery: true,
+    proxied: process.env.NODE_ENV === 'production',
     cors: {
         origin: [
             "http://localhost:5173",
             "https://studysync-enqu.onrender.com",
             "https://studysync-frontend.onrender.com"
         ],
-        methods: ["GET", "POST"],
         credentials: true
     }
 });
 
-const rooms = {}; // roomId -> Set of socket IDs
-const roomNames = {}; // roomId -> { socketId: name }
+// Store room information
+const rooms = {}; // roomId -> Set of peer IDs
+const roomNames = {}; // roomId -> { peerId: name }
+const peerToRoom = {}; // peerId -> roomId
 
-io.on('connection', (socket) => {
-    console.log('User connected:', socket.id);
+// Handle peer server events
+peerServer.on('connection', (client) => {
+    console.log('🔗 Peer connected:', client.getId());
+});
 
-    socket.on('join-room', ({ roomId, name }) => {
-        console.log(`User ${name} (${socket.id}) joining room ${roomId}`);
-        socket.join(roomId);
-        if (!rooms[roomId]) rooms[roomId] = new Set();
-        if (!roomNames[roomId]) roomNames[roomId] = {};
-        rooms[roomId].add(socket.id);
-        roomNames[roomId][socket.id] = name || socket.id;
-        // Send current participants (with names) to the new user
-        socket.emit('participants', Object.entries(roomNames[roomId]).map(([id, n]) => ({ id, name: n })));
-        // Notify others
-        socket.to(roomId).emit('user-joined', { id: socket.id, name: name || socket.id });
-    });
-
-    socket.on('announce', ({ groupId, userId, name }) => {
-        console.log(`User ${name} (${userId}) announcing in group ${groupId}`);
-        if (!rooms[groupId]) rooms[groupId] = new Set();
-        if (!roomNames[groupId]) roomNames[groupId] = {};
-        rooms[groupId].add(userId);
-        roomNames[groupId][userId] = name || userId;
-        io.to(groupId).emit('announce', { userId, name: name || userId });
-        io.to(groupId).emit('participants', Object.entries(roomNames[groupId]).map(([id, n]) => ({ id, name: n })));
-    });
-
-    socket.on('signal', ({ roomId, data }) => {
-        console.log(`Signal from ${socket.id} in room ${roomId}:`, data.type);
-        socket.to(roomId).emit('signal', { sender: socket.id, data });
-    });
-
-    socket.on('disconnecting', () => {
-        console.log(`User ${socket.id} disconnecting from rooms:`, Array.from(socket.rooms));
-        for (const roomId of socket.rooms) {
-            if (roomId !== socket.id) {
-                socket.to(roomId).emit('user-left', socket.id);
-                if (rooms[roomId]) rooms[roomId].delete(socket.id);
-                if (roomNames[roomId]) delete roomNames[roomId][socket.id];
-                io.to(roomId).emit('participants', Object.entries(roomNames[roomId] || {}).map(([id, n]) => ({ id, name: n })));
-            }
+peerServer.on('disconnect', (client) => {
+    console.log('🔌 Peer disconnected:', client.getId());
+    const peerId = client.getId();
+    
+    // Remove from all rooms
+    if (peerToRoom[peerId]) {
+        const roomId = peerToRoom[peerId];
+        if (rooms[roomId]) {
+            rooms[roomId].delete(peerId);
         }
-    });
+        if (roomNames[roomId]) {
+            delete roomNames[roomId][peerId];
+        }
+        delete peerToRoom[peerId];
+        
+        // Notify other peers in the room
+        peerServer.emit('user-left-room', { roomId, peerId });
+    }
+});
 
-    socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
+peerServer.on('error', (error) => {
+    console.error('❌ Peer server error:', error);
+});
+
+// REST API endpoints for room management
+app.get('/api/rooms/:roomId/participants', (req, res) => {
+    const { roomId } = req.params;
+    const participants = roomNames[roomId] ? 
+        Object.entries(roomNames[roomId]).map(([id, name]) => ({ id, name })) : 
+        [];
+    res.json({ participants });
+});
+
+app.post('/api/rooms/:roomId/join', (req, res) => {
+    const { roomId } = req.params;
+    const { peerId, name } = req.body;
+    
+    if (!rooms[roomId]) rooms[roomId] = new Set();
+    if (!roomNames[roomId]) roomNames[roomId] = {};
+    
+    rooms[roomId].add(peerId);
+    roomNames[roomId][peerId] = name || peerId;
+    peerToRoom[peerId] = roomId;
+    
+    console.log(`User ${name} (${peerId}) joined room ${roomId}`);
+    
+    res.json({ 
+        success: true, 
+        participants: Object.entries(roomNames[roomId]).map(([id, n]) => ({ id, name: n }))
     });
+});
+
+app.post('/api/rooms/:roomId/leave', (req, res) => {
+    const { roomId } = req.params;
+    const { peerId } = req.body;
+    
+    if (rooms[roomId]) {
+        rooms[roomId].delete(peerId);
+    }
+    if (roomNames[roomId]) {
+        delete roomNames[roomId][peerId];
+    }
+    delete peerToRoom[peerId];
+    
+    console.log(`User ${peerId} left room ${roomId}`);
+    
+    res.json({ success: true });
 });
 
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.json({
         status: 'ok',
+        service: 'peer-meeting-server',
         rooms: Object.keys(rooms).length,
+        totalPeers: Object.keys(peerToRoom).length,
         timestamp: Date.now()
     });
 });
 
 const PORT = process.env.PORT || 5003;
 server.listen(PORT, () => {
-    console.log(`Meeting backend running on port ${PORT}`);
+    console.log(`🚀 PeerJS meeting server running on port ${PORT}`);
+    console.log(`📡 PeerJS path: /peerjs`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`CORS enabled for: localhost:5173, studysync-enqu.onrender.com, studysync-frontend.onrender.com`);
-}); 
+});
+
+module.exports = { app, server, peerServer }; 
