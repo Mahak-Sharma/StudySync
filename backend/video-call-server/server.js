@@ -10,6 +10,7 @@ const io = socketIo(server, {
     cors: {
         origin: [
             "http://localhost:5173",
+            "http://localhost:5174",
             "https://studysync-enqu.onrender.com"
         ], // Allow both local and hosted frontend
         methods: ["GET", "POST"]
@@ -20,6 +21,7 @@ const io = socketIo(server, {
 app.use(cors({
     origin: [
         "http://localhost:5173",
+        "http://localhost:5174",
         "https://studysync-enqu.onrender.com"
     ],
     credentials: true
