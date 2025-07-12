@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useVideoCallContext } from '../../contexts/VideoCallContext';
-import io from 'socket.io-client';
+import { Peer } from 'peerjs';
 import './VideoCall.css';
 import IncomingCallModal from './IncomingCallModal';
 
@@ -17,23 +17,18 @@ const VideoCallComponent = ({ isOpen, onClose, friendId, friendName }) => {
     const [callStatus, setCallStatus] = useState('idle'); // idle, calling, connected, ended
     const [incomingCall, setIncomingCall] = useState(null); // { from, fromName }
     const [showIncomingModal, setShowIncomingModal] = useState(false);
+    const [connectionStatus, setConnectionStatus] = useState('disconnected');
 
     const localVideoRef = useRef(null);
     const remoteVideoRef = useRef(null);
-    const socketRef = useRef(null);
-    const peerConnectionRef = useRef(null);
+    const peerRef = useRef(null);
+    const callRef = useRef(null);
     const localStreamRef = useRef(null);
 
-    const configuration = {
-        iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' }
-        ]
-    };
-
+    // Initialize PeerJS
     useEffect(() => {
         if (isOpen && user) {
-            initializeSocket();
+            initializePeerJS();
             setupMediaStream();
 
             // Check for pending calls from global context
@@ -65,65 +60,62 @@ const VideoCallComponent = ({ isOpen, onClose, friendId, friendName }) => {
         }
     }, [remoteStream, remoteVideoRef]);
 
-    const initializeSocket = () => {
-        socketRef.current = io(import.meta.env.PROD 
-          ? 'https://studysync-enqu.onrender.com' 
-          : 'http://localhost:5002'
-        ); // Video call server port
-
-        socketRef.current.on('connect', () => {
-            console.log('Connected to video call server');
-            socketRef.current.emit('user-ready', {
-                username: user.uid,
-                displayName: user.displayName || user.email
-            });
+    const initializePeerJS = () => {
+        console.log('Initializing PeerJS for video call');
+        
+        // Create a unique peer ID for this user
+        const peerId = `user-${user.uid}-${Date.now()}`;
+        
+        peerRef.current = new Peer(peerId, {
+            host: import.meta.env.VITE_PEER_SERVER_HOST || 'localhost',
+            port: import.meta.env.VITE_PEER_SERVER_PORT || 9000,
+            path: '/peerjs',
+            secure: import.meta.env.PROD,
+            config: {
+                iceServers: [
+                    { urls: "stun:stun.l.google.com:19302" },
+                    { urls: "stun:stun1.l.google.com:19302" },
+                    { urls: "stun:stun2.l.google.com:19302" },
+                    { urls: "stun:stun3.l.google.com:19302" },
+                    { urls: "stun:stun4.l.google.com:19302" },
+                    {
+                        urls: "turn:openrelay.metered.ca:80",
+                        username: "openrelayproject",
+                        credential: "openrelayproject"
+                    },
+                    {
+                        urls: "turn:openrelay.metered.ca:443",
+                        username: "openrelayproject",
+                        credential: "openrelayproject"
+                    }
+                ]
+            }
         });
 
-        socketRef.current.on('call-request', (data) => {
-            if (data.from === friendId) {
-                setIncomingCall({ from: data.from, fromName: data.fromName });
+        peerRef.current.on('open', (id) => {
+            console.log('✅ PeerJS connected with ID:', id);
+            setConnectionStatus('connected');
+        });
+
+        peerRef.current.on('error', (error) => {
+            console.error('❌ PeerJS error:', error);
+            setConnectionStatus('error');
+        });
+
+        peerRef.current.on('disconnected', () => {
+            console.log('🔌 PeerJS disconnected');
+            setConnectionStatus('disconnected');
+        });
+
+        // Handle incoming calls
+        peerRef.current.on('call', async (call) => {
+            console.log('📞 Incoming call from:', call.peer);
+            
+            // Check if this is from our friend
+            if (call.peer.includes(friendId)) {
+                setIncomingCall({ from: call.peer, fromName: friendName });
                 setShowIncomingModal(true);
-                // Also show global notification
-                showIncomingCall(data.from, data.fromName);
-            }
-        });
-
-        socketRef.current.on('call-accepted', (data) => {
-            if (data.from === friendId) {
-                setCallStatus('connected');
-                setIsCallActive(true);
-                createPeerConnection();
-            }
-        });
-
-        socketRef.current.on('call-rejected', (data) => {
-            if (data.from === friendId) {
-                setCallStatus('ended');
-                setIsCallActive(false);
-            }
-        });
-
-        socketRef.current.on('call-ended', (data) => {
-            if (data.from === friendId) {
-                endCall();
-            }
-        });
-
-        socketRef.current.on('ice-candidate', (data) => {
-            if (data.from === friendId && peerConnectionRef.current) {
-                peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
-            }
-        });
-
-        socketRef.current.on('offer', (data) => {
-            if (data.from === friendId) {
-                handleOffer({ ...data.offer, from: data.from });
-            }
-        });
-
-        socketRef.current.on('answer', (data) => {
-            if (data.from === friendId && peerConnectionRef.current) {
-                handleAnswer(data.answer);
+                showIncomingCall(call.peer, friendName);
             }
         });
     };
@@ -146,172 +138,135 @@ const VideoCallComponent = ({ isOpen, onClose, friendId, friendName }) => {
         }
     };
 
-    const createPeerConnection = () => {
-        peerConnectionRef.current = new RTCPeerConnection(configuration);
-
-        // Add local stream to peer connection
-        if (localStreamRef.current) {
-            localStreamRef.current.getTracks().forEach(track => {
-                peerConnectionRef.current.addTrack(track, localStreamRef.current);
-            });
-        }
-
-        // Handle incoming streams
-        peerConnectionRef.current.ontrack = (event) => {
-            console.log('Received remote stream:', event.streams[0]);
-            setRemoteStream(event.streams[0]);
-            if (remoteVideoRef.current) {
-                remoteVideoRef.current.srcObject = event.streams[0];
-                remoteVideoRef.current.play().catch(e => console.error('Error playing remote video:', e));
-            }
-        };
-
-        // Handle ICE candidates
-        peerConnectionRef.current.onicecandidate = (event) => {
-            if (event.candidate) {
-                socketRef.current.emit('ice-candidate', {
-                    to: friendId,
-                    from: user.uid,
-                    candidate: event.candidate
-                });
-            }
-        };
-    };
-
     const startCall = async () => {
-        if (!friendId) return;
+        if (!friendId || !localStreamRef.current || !peerRef.current) return;
 
         setCallStatus('calling');
-        createPeerConnection(); // Create peer connection when starting call
-        socketRef.current.emit('call-request', {
-            to: friendId,
-            from: user.uid,
-            fromName: user.displayName || user.email
-        });
+        
+        try {
+            // Create a peer ID for the friend (this would be known from your app's user system)
+            const friendPeerId = `user-${friendId}`;
+            
+            console.log('📞 Calling peer:', friendPeerId);
+            const call = peerRef.current.call(friendPeerId, localStreamRef.current);
+            callRef.current = call;
+            
+            call.on('stream', (remoteStream) => {
+                console.log('🎥 Received remote stream from:', friendPeerId);
+                setRemoteStream(remoteStream);
+                setCallStatus('connected');
+                setIsCallActive(true);
+            });
+            
+            call.on('close', () => {
+                console.log('📞 Call closed with:', friendPeerId);
+                endCall();
+            });
+            
+            call.on('error', (error) => {
+                console.error('❌ Call error with:', friendPeerId, error);
+                endCall();
+            });
+            
+        } catch (error) {
+            console.error('❌ Error starting call:', error);
+            setCallStatus('ended');
+        }
     };
 
     const handleAcceptCall = async () => {
-        if (incomingCall) {
-            socketRef.current.emit('call-accepted', {
-                to: incomingCall.from,
-                from: user.uid
-            });
-            setCallStatus('connected');
-            setIsCallActive(true);
-            createPeerConnection();
-            setShowIncomingModal(false);
-
-            // Create and send offer to the caller
+        if (incomingCall && localStreamRef.current && peerRef.current) {
             try {
-                const offer = await peerConnectionRef.current.createOffer();
-                await peerConnectionRef.current.setLocalDescription(offer);
-
-                socketRef.current.emit('offer', {
-                    to: incomingCall.from,
-                    from: user.uid,
-                    offer: offer
+                // Find the call object (this would need to be stored when the call comes in)
+                // For now, we'll create a new call to the incoming peer
+                const call = peerRef.current.call(incomingCall.from, localStreamRef.current);
+                callRef.current = call;
+                
+                call.on('stream', (remoteStream) => {
+                    console.log('🎥 Received remote stream from:', incomingCall.from);
+                    setRemoteStream(remoteStream);
+                    setCallStatus('connected');
+                    setIsCallActive(true);
                 });
+                
+                call.on('close', () => {
+                    console.log('📞 Call closed with:', incomingCall.from);
+                    endCall();
+                });
+                
+                call.on('error', (error) => {
+                    console.error('❌ Call error with:', incomingCall.from, error);
+                    endCall();
+                });
+                
+                setShowIncomingModal(false);
+                setIncomingCall(null);
+                
             } catch (error) {
-                console.error('Error creating offer:', error);
+                console.error('❌ Error accepting call:', error);
             }
         }
     };
 
     const handleRejectCall = () => {
-        if (incomingCall) {
-            socketRef.current.emit('call-rejected', {
-                to: incomingCall.from,
-                from: user.uid
-            });
-            setShowIncomingModal(false);
-            setIncomingCall(null);
-        }
-    };
-
-    const handleOffer = async (offer) => {
-        try {
-            if (!peerConnectionRef.current) {
-                createPeerConnection();
-            }
-
-            await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
-            const answer = await peerConnectionRef.current.createAnswer();
-            await peerConnectionRef.current.setLocalDescription(answer);
-
-            // Send answer to the person who sent the offer
-            const offerFrom = offer.from || friendId;
-            socketRef.current.emit('answer', {
-                to: offerFrom,
-                from: user.uid,
-                answer: answer
-            });
-        } catch (error) {
-            console.error('Error handling offer:', error);
-        }
-    };
-
-    const handleAnswer = async (answer) => {
-        try {
-            if (peerConnectionRef.current) {
-                await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
-            }
-        } catch (error) {
-            console.error('Error handling answer:', error);
-        }
+        setShowIncomingModal(false);
+        setIncomingCall(null);
+        setCallStatus('ended');
     };
 
     const endCall = () => {
-        if (peerConnectionRef.current) {
-            peerConnectionRef.current.close();
-            peerConnectionRef.current = null;
+        if (callRef.current) {
+            callRef.current.close();
+            callRef.current = null;
         }
-
-        if (localStreamRef.current) {
-            localStreamRef.current.getTracks().forEach(track => track.stop());
-            localStreamRef.current = null;
-        }
-
-        setLocalStream(null);
+        
         setRemoteStream(null);
-        setIsCallActive(false);
         setCallStatus('ended');
-
-        socketRef.current.emit('call-ended', {
-            to: friendId,
-            from: user.uid
-        });
+        setIsCallActive(false);
+        setShowIncomingModal(false);
+        setIncomingCall(null);
     };
 
     const toggleMute = () => {
         if (localStreamRef.current) {
-            const audioTrack = localStreamRef.current.getAudioTracks()[0];
-            if (audioTrack) {
-                audioTrack.enabled = !audioTrack.enabled;
-                setIsMuted(!audioTrack.enabled);
-            }
+            localStreamRef.current.getAudioTracks().forEach(track => {
+                track.enabled = !track.enabled;
+            });
+            setIsMuted(!isMuted);
         }
     };
 
     const toggleVideo = () => {
         if (localStreamRef.current) {
-            const videoTrack = localStreamRef.current.getVideoTracks()[0];
-            if (videoTrack) {
-                videoTrack.enabled = !videoTrack.enabled;
-                setIsVideoOff(!videoTrack.enabled);
-            }
+            localStreamRef.current.getVideoTracks().forEach(track => {
+                track.enabled = !track.enabled;
+            });
+            setIsVideoOff(!isVideoOff);
         }
     };
 
     const cleanup = () => {
-        if (socketRef.current) {
-            socketRef.current.disconnect();
+        if (callRef.current) {
+            callRef.current.close();
+            callRef.current = null;
         }
-        if (peerConnectionRef.current) {
-            peerConnectionRef.current.close();
-        }
+        
         if (localStreamRef.current) {
             localStreamRef.current.getTracks().forEach(track => track.stop());
+            localStreamRef.current = null;
         }
+        
+        if (peerRef.current) {
+            peerRef.current.destroy();
+            peerRef.current = null;
+        }
+        
+        setLocalStream(null);
+        setRemoteStream(null);
+        setCallStatus('idle');
+        setIsCallActive(false);
+        setShowIncomingModal(false);
+        setIncomingCall(null);
     };
 
     if (!isOpen) return null;
@@ -322,6 +277,27 @@ const VideoCallComponent = ({ isOpen, onClose, friendId, friendName }) => {
                 <div className="video-call-header">
                     <h3>Video Call with {friendName}</h3>
                     <button className="close-btn" onClick={onClose}>×</button>
+                </div>
+
+                {/* Connection Status */}
+                <div style={{
+                    padding: '8px 12px',
+                    marginBottom: '16px',
+                    borderRadius: '4px',
+                    backgroundColor: connectionStatus === 'connected' ? '#4caf50' :
+                        connectionStatus === 'connecting' ? '#ff9800' :
+                            connectionStatus === 'error' ? '#f44336' : '#9e9e9e',
+                    color: 'white',
+                    fontSize: '14px'
+                }}>
+                    Status: {connectionStatus === 'connected' ? 'Connected' :
+                        connectionStatus === 'connecting' ? 'Connecting...' :
+                            connectionStatus === 'error' ? 'Connection Error' : 'Disconnected'}
+                    {connectionStatus === 'connected' && peerRef.current && (
+                        <span style={{ marginLeft: '8px', fontSize: '12px' }}>
+                            (ID: {peerRef.current.id})
+                        </span>
+                    )}
                 </div>
 
                 <div className="video-call-content">
@@ -360,18 +336,25 @@ const VideoCallComponent = ({ isOpen, onClose, friendId, friendName }) => {
 
                     <div className="call-controls">
                         {callStatus === 'idle' && (
-                            <button
-                                className="call-btn start-call"
-                                onClick={startCall}
-                            >
-                                📞 Start Call
-                            </button>
+                            <div className="call-controls-idle">
+                                <button 
+                                    className="call-btn start-call"
+                                    onClick={startCall}
+                                    disabled={connectionStatus !== 'connected'}
+                                    style={{
+                                        opacity: connectionStatus !== 'connected' ? 0.5 : 1,
+                                        cursor: connectionStatus !== 'connected' ? 'not-allowed' : 'pointer'
+                                    }}
+                                >
+                                    📞 Start Call
+                                </button>
+                            </div>
                         )}
 
                         {callStatus === 'calling' && (
                             <div className="calling-status">
                                 <p>Calling {friendName}...</p>
-                                <button
+                                <button 
                                     className="call-btn end-call"
                                     onClick={endCall}
                                 >
@@ -382,19 +365,19 @@ const VideoCallComponent = ({ isOpen, onClose, friendId, friendName }) => {
 
                         {callStatus === 'connected' && (
                             <div className="call-controls-active">
-                                <button
-                                    className={`control-btn ${isMuted ? 'muted' : ''}`}
+                                <button 
+                                    className="call-btn"
                                     onClick={toggleMute}
                                 >
-                                    {isMuted ? '🔇' : '🔊'}
+                                    {isMuted ? '🔇 Unmute' : '🔊 Mute'}
                                 </button>
-                                <button
-                                    className={`control-btn ${isVideoOff ? 'video-off' : ''}`}
+                                <button 
+                                    className="call-btn"
                                     onClick={toggleVideo}
                                 >
-                                    {isVideoOff ? '📷' : '📹'}
+                                    {isVideoOff ? '📹 Show Video' : '📹 Hide Video'}
                                 </button>
-                                <button
+                                <button 
                                     className="call-btn end-call"
                                     onClick={endCall}
                                 >
@@ -406,7 +389,7 @@ const VideoCallComponent = ({ isOpen, onClose, friendId, friendName }) => {
                         {callStatus === 'ended' && (
                             <div className="call-ended">
                                 <p>Call ended</p>
-                                <button
+                                <button 
                                     className="call-btn start-call"
                                     onClick={startCall}
                                 >
@@ -419,12 +402,13 @@ const VideoCallComponent = ({ isOpen, onClose, friendId, friendName }) => {
             </div>
 
             {/* Incoming Call Modal */}
-            <IncomingCallModal
-                open={showIncomingModal}
-                callerName={incomingCall?.fromName || 'Unknown'}
-                onAccept={handleAcceptCall}
-                onReject={handleRejectCall}
-            />
+            {showIncomingModal && incomingCall && (
+                <IncomingCallModal
+                    fromName={incomingCall.fromName}
+                    onAccept={handleAcceptCall}
+                    onReject={handleRejectCall}
+                />
+            )}
         </div>
     );
 };
