@@ -112,9 +112,9 @@
     align-self: flex-end;
 }
 
-.chatbot-message.bot {
+.chatbot-message.model {
     background-color: #eeeeee;
-    color: #f8f5f5;
+    color: #333333;
     align-self: flex-start;
 }
 
