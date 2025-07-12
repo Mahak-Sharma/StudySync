@@ -24,9 +24,12 @@ const MeetingRoom = ({ groupId, userName }) => {
     // Create a unique peer ID for this user in this room
     const peerId = `${groupId}-${userName}-${Date.now()}`;
     
+    // Clean up host URL - remove protocol if present
+    const host = (import.meta.env.VITE_PEER_SERVER_HOST || 'studysync-enqu.onrender.com').replace(/^https?:\/\//, '');
+    
     peerRef.current = new Peer(peerId, {
-      host: import.meta.env.VITE_PEER_SERVER_HOST || 'studysync-enqu.onrender.com',
-      port: import.meta.env.VITE_PEER_SERVER_PORT || 9000,
+      host: host,
+      port: import.meta.env.VITE_PEER_SERVER_PORT || 443, // Use 443 for Render HTTPS
       path: '/peerjs',
       secure: import.meta.env.VITE_PEER_SERVER_SECURE === 'true' || import.meta.env.PROD,
       config: {
