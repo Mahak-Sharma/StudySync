@@ -11,7 +11,9 @@ app.use(cors({
     origin: [
         "http://localhost:5173",
         "https://studysync-enqu.onrender.com",
-        "https://studysync-frontend.onrender.com"
+        "https://studysync-frontend.onrender.com",
+        "https://studysync-3435a.web.app",
+        "https://studysync-3435a.firebaseapp.com"
     ],
     credentials: true
 }));
@@ -26,7 +28,9 @@ const peerServer = PeerServer({
         origin: [
             "http://localhost:5173",
             "https://studysync-enqu.onrender.com",
-            "https://studysync-frontend.onrender.com"
+            "https://studysync-frontend.onrender.com",
+            "https://studysync-3435a.web.app",
+            "https://studysync-3435a.firebaseapp.com"
         ],
         credentials: true
     }
