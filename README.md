@@ -12,7 +12,7 @@ A modern, collaborative group study platform built with React and Python.
 - **In-Memory Processing:** Files are processed in memory without saving to disk for privacy.
 - **Leaderboard:** Track your progress and compete with friends.
 - **Todo Board:** Organize study tasks and assignments.
-- **AI Chatbot:** Get instant study help and summaries.
+- **AI Chatbot:** Get instant study help and summaries with Google's Gemini AI or fallback responses.
 - **Modern UI:** Beautiful, responsive design with vibrant gradients and the Poppins font.
 
 ## 🛠️ Tech Stack
@@ -26,6 +26,7 @@ A modern, collaborative group study platform built with React and Python.
 - **Node.js** (v16 or higher) - [Download here](https://nodejs.org/)
 - **Python** (v3.8 or higher) - [Download here](https://python.org/)
 - **pip** (Python package manager, usually comes with Python)
+- **Google Generative AI API Key** (optional) - [Get here](https://makersuite.google.com/app/apikey) for enhanced chatbot functionality
 
 ### Quick Start (Complete Stack - Frontend + Both Backends)
 
@@ -59,6 +60,7 @@ The startup script will:
 - **No File Storage:** Uploaded files are processed in memory and never saved to disk
 - **Instant Processing:** Files are summarized immediately and then discarded
 - **Privacy First:** Your documents remain private and aren't stored on the server
+- **Secure API Keys:** Chatbot API keys are stored in environment variables and never committed to version control
 
 ### Access Your Application
 - **Frontend:** [http://localhost:5173](http://localhost:5173)
@@ -100,6 +102,15 @@ This removes the old uploads folder since files are now processed in memory.
 - `src/assets/` — Static assets (images, icons)
 - `src/contexts/` — React context providers (Auth, Socket)
 - `src/api/` — API utilities
+
+## 🤖 Chatbot Setup
+For enhanced chatbot functionality with Google's Gemini AI:
+
+1. **Get API Key:** Visit [Google AI Studio](https://makersuite.google.com/app/apikey) and create an API key
+2. **Create `.env` file:** Add `VITE_GEMINI_API_KEY=your_actual_api_key_here` to the root directory
+3. **Restart:** Restart the development server after adding the API key
+
+**Note:** The chatbot works without an API key using intelligent fallback responses for basic queries.
 
 ## 🤝 Contributing
 Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
