@@ -217,13 +217,24 @@ const MeetingRoom = ({ groupId, userName }) => {
       
       call.on('error', (error) => {
         console.error('❌ Call error with:', peerId, error);
-        removePeer(peerId);
+        // Don't remove peer immediately on error - give it a chance to reconnect
+        if (error.type === 'peer-unavailable') {
+          console.log('⚠️ Peer is unavailable, will retry later');
+        } else if (error.type === 'network') {
+          console.log('⚠️ Network error, will retry later');
+        } else {
+          removePeer(peerId);
+        }
       });
       
       peerConnections.current[peerId] = call;
       
     } catch (error) {
       console.error('❌ Error calling peer:', peerId, error);
+      // Show user-friendly error message
+      if (error.message.includes('Could not connect to peer')) {
+        console.log('⚠️ Peer is offline or not available');
+      }
     }
   };
 
@@ -298,13 +309,22 @@ const MeetingRoom = ({ groupId, userName }) => {
         color: 'white',
         fontSize: '14px'
       }}>
-        Status: {connectionStatus === 'connected' ? 'Connected' :
-          connectionStatus === 'connecting' ? 'Connecting...' :
-            connectionStatus === 'error' ? 'Connection Error' : 'Disconnected'}
-        {connectionStatus === 'connected' && peerRef.current && (
-          <span style={{ marginLeft: '8px', fontSize: '12px' }}>
-            (ID: {peerRef.current.id})
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>
+            Status: {connectionStatus === 'connected' ? 'Connected to PeerJS Server' :
+              connectionStatus === 'connecting' ? 'Connecting to PeerJS Server...' :
+                connectionStatus === 'error' ? 'Connection Error - Check Server' : 'Disconnected'}
           </span>
+          {connectionStatus === 'connected' && peerRef.current && (
+            <span style={{ fontSize: '12px', opacity: 0.8 }}>
+              ID: {peerRef.current.id}
+            </span>
+          )}
+        </div>
+        {connectionStatus === 'error' && (
+          <div style={{ fontSize: '12px', marginTop: '4px', opacity: 0.9 }}>
+            Make sure the PeerJS server is running on port 9000
+          </div>
         )}
       </div>
 
