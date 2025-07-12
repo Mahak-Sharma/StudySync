@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useAuth } from './AuthContext';
-import io from 'socket.io-client';
+import { Peer } from 'peerjs';
 import IncomingCallModal from '../components/VideoCall/IncomingCallModal';
 
 const VideoCallContext = createContext();
@@ -14,157 +14,94 @@ export const VideoCallProvider = ({ children }) => {
   const [remoteStream, setRemoteStream] = useState(null);
   const [groupParticipants, setGroupParticipants] = useState([]); // For group calls: [{ userId, displayName, stream }]
   const [callStatus, setCallStatus] = useState('idle'); // idle, calling, connected, ended
+  const [connectionStatus, setConnectionStatus] = useState('disconnected');
 
-  const socketRef = useRef(null);
-  const peerConnectionRef = useRef(null);
-  const groupPeersRef = useRef({}); // For group calls: userId -> RTCPeerConnection
+  const peerRef = useRef(null);
+  const callRef = useRef(null);
+  const groupPeersRef = useRef({}); // For group calls: userId -> PeerJS call
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
 
-  const configuration = {
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-      {
-        urls: 'turn:openrelay.metered.ca:80',
-        username: 'openrelayproject',
-        credential: 'openrelayproject'
-      }
-    ]
-  };
-
-  // Connect to socket server globally
+  // Initialize PeerJS globally
   useEffect(() => {
     if (!user) return;
-    if (socketRef.current) return;
+    if (peerRef.current) return;
 
-    socketRef.current = io(import.meta.env.PROD 
-      ? 'https://studysync-enqu.onrender.com' 
-      : 'http://localhost:5002'
-    );
-    socketRef.current.on('connect', () => {
-      socketRef.current.emit('user-ready', {
-        username: user.uid,
-        displayName: user.displayName || user.email
-      });
-    });
-
-    // Listen for incoming calls
-    socketRef.current.on('call-request', (data) => {
-      console.log('Global incoming call:', data);
-      setIncomingCall({
-        from: data.from,
-        fromName: data.fromName,
-        groupId: data.groupId
-      });
-      setShowIncomingModal(true);
-    });
-
-    // Handle call accepted
-    socketRef.current.on('call-accepted', (data) => {
-      if (activeCall && data.from === activeCall.friendId) {
-        setCallStatus('connected');
-        createPeerConnection();
-      }
-    });
-
-    // Handle call rejected
-    socketRef.current.on('call-rejected', (data) => {
-      if (activeCall && data.from === activeCall.friendId) {
-        setCallStatus('ended');
-        setActiveCall(null);
-      }
-    });
-
-    // Handle offers
-    socketRef.current.on('offer', (data) => {
-      console.log('Received offer from:', data.from, 'for active call:', activeCall);
-      if (activeCall && data.from === activeCall.friendId) {
-        handleOffer(data.offer);
-      }
-    });
-
-    // Handle answers
-    socketRef.current.on('answer', (data) => {
-      console.log('Received answer from:', data.from, 'for active call:', activeCall);
-      if (activeCall && data.from === activeCall.friendId && peerConnectionRef.current) {
-        handleAnswer(data.answer);
-      }
-    });
-
-    // Handle ICE candidates
-    socketRef.current.on('ice-candidate', (data) => {
-      if (activeCall && data.from === activeCall.friendId && peerConnectionRef.current) {
-        peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
-      }
-    });
-
-    // Group call events
-    socketRef.current.on('user-joined-room', async ({ userId, displayName }) => {
-      if (activeCall && activeCall.type === 'group' && userId !== user.uid) {
-        console.log('User joined group call:', userId, displayName);
-        createGroupPeerConnection(userId, displayName, true);
-      }
-    });
-
-    socketRef.current.on('user-left-room', ({ userId }) => {
-      if (activeCall && activeCall.type === 'group') {
-        console.log('User left group call:', userId);
-        if (groupPeersRef.current[userId]) {
-          groupPeersRef.current[userId].close();
-          delete groupPeersRef.current[userId];
-        }
-        setGroupParticipants(prev => prev.filter(p => p.userId !== userId));
-      }
-    });
-
-    socketRef.current.on('group-offer', async ({ from, offer }) => {
-      if (activeCall && activeCall.type === 'group' && from !== user.uid) {
-        console.log('Received group offer from:', from);
-        if (!groupPeersRef.current[from]) {
-          createGroupPeerConnection(from, 'Unknown', false);
-        }
-        await groupPeersRef.current[from].setRemoteDescription(new RTCSessionDescription(offer));
-        const answer = await groupPeersRef.current[from].createAnswer();
-        await groupPeersRef.current[from].setLocalDescription(answer);
-        socketRef.current.emit('group-answer', {
-          roomId: activeCall.groupId,
-          from: user.uid,
-          answer
-        });
-      }
-    });
-
-    socketRef.current.on('group-answer', async ({ from, answer }) => {
-      if (activeCall && activeCall.type === 'group' && from !== user.uid) {
-        console.log('Received group answer from:', from);
-        if (groupPeersRef.current[from]) {
-          await groupPeersRef.current[from].setRemoteDescription(new RTCSessionDescription(answer));
-        }
-      }
-    });
-
-    socketRef.current.on('group-ice-candidate', async ({ from, candidate }) => {
-      if (activeCall && activeCall.type === 'group' && from !== user.uid) {
-        console.log('Received group ICE candidate from:', from);
-        if (groupPeersRef.current[from]) {
-          try {
-            await groupPeersRef.current[from].addIceCandidate(new RTCIceCandidate(candidate));
-          } catch (e) {
-            // ignore
+    console.log('Initializing global PeerJS for user:', user.uid);
+    
+    // Create a unique peer ID for this user
+    const peerId = `user-${user.uid}-${Date.now()}`;
+    
+    peerRef.current = new Peer(peerId, {
+      host: import.meta.env.VITE_PEER_SERVER_HOST || 'localhost',
+      port: import.meta.env.VITE_PEER_SERVER_PORT || 9000,
+      path: '/peerjs',
+      secure: import.meta.env.PROD,
+      config: {
+        iceServers: [
+          { urls: "stun:stun.l.google.com:19302" },
+          { urls: "stun:stun1.l.google.com:19302" },
+          { urls: "stun:stun2.l.google.com:19302" },
+          { urls: "stun:stun3.l.google.com:19302" },
+          { urls: "stun:stun4.l.google.com:19302" },
+          {
+            urls: "turn:openrelay.metered.ca:80",
+            username: "openrelayproject",
+            credential: "openrelayproject"
+          },
+          {
+            urls: "turn:openrelay.metered.ca:443",
+            username: "openrelayproject",
+            credential: "openrelayproject"
           }
-        }
+        ]
+      }
+    });
+
+    peerRef.current.on('open', (id) => {
+      console.log('✅ Global PeerJS connected with ID:', id);
+      setConnectionStatus('connected');
+    });
+
+    peerRef.current.on('error', (error) => {
+      console.error('❌ Global PeerJS error:', error);
+      setConnectionStatus('error');
+    });
+
+    peerRef.current.on('disconnected', () => {
+      console.log('🔌 Global PeerJS disconnected');
+      setConnectionStatus('disconnected');
+    });
+
+    // Handle incoming calls
+    peerRef.current.on('call', async (call) => {
+      console.log('📞 Global incoming call from:', call.peer);
+      
+      // For 1:1 calls, check if it's from a friend
+      if (activeCall && activeCall.type === '1:1' && call.peer.includes(activeCall.friendId)) {
+        setIncomingCall({
+          from: call.peer,
+          fromName: activeCall.friendName,
+          groupId: null
+        });
+        setShowIncomingModal(true);
+      }
+      // For group calls, check if it's from a group member
+      else if (activeCall && activeCall.type === 'group' && call.peer.includes(activeCall.groupId)) {
+        // Extract user info from peer ID
+        const peerName = call.peer.split('-').slice(1, -1).join('-');
+        handleGroupCall(call, peerName);
       }
     });
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
+      if (peerRef.current) {
+        console.log('Cleaning up global PeerJS connection');
+        peerRef.current.destroy();
+        peerRef.current = null;
       }
     };
-    // eslint-disable-next-line
-  }, [user]);
+  }, [user, activeCall]);
 
   // Setup media stream
   const setupMediaStream = async () => {
@@ -181,285 +118,208 @@ export const VideoCallProvider = ({ children }) => {
     }
   };
 
-  // Create peer connection
-  const createPeerConnection = (stream) => {
-    console.log('Creating peer connection for 1:1 call');
-    peerConnectionRef.current = new RTCPeerConnection(configuration);
-
-    const mediaStream = stream || localStream;
-    if (mediaStream) {
-      mediaStream.getTracks().forEach(track => {
-        peerConnectionRef.current.addTrack(track, mediaStream);
-      });
-    }
-
-    peerConnectionRef.current.ontrack = (event) => {
-      console.log('Received remote stream in 1:1 call:', event.streams[0]);
-      setRemoteStream(event.streams[0]);
-    };
-
-    peerConnectionRef.current.onicecandidate = (event) => {
-      if (event.candidate && socketRef.current && activeCall) {
-        socketRef.current.emit('ice-candidate', {
-          to: activeCall.friendId,
-          from: user.uid,
-          candidate: event.candidate
-        });
-      }
-    };
-  };
-
-  // Handle offer
-  const handleOffer = async (offer) => {
-    try {
-      console.log('Handling offer in 1:1 call');
-      if (!peerConnectionRef.current) {
-        createPeerConnection();
-      }
-
-      await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
-      const answer = await peerConnectionRef.current.createAnswer();
-      await peerConnectionRef.current.setLocalDescription(answer);
-
-      socketRef.current.emit('answer', {
-        to: activeCall.friendId,
-        from: user.uid,
-        answer: answer
-      });
-    } catch (error) {
-      console.error('Error handling offer:', error);
-    }
-  };
-
-  // Handle answer
-  const handleAnswer = async (answer) => {
-    try {
-      console.log('Handling answer in 1:1 call');
-      if (peerConnectionRef.current) {
-        await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
-      }
-    } catch (error) {
-      console.error('Error handling answer:', error);
-    }
-  };
-
-  // Create peer connection for group calls
-  const createGroupPeerConnection = (peerId, displayName, isInitiator) => {
-    const pc = new RTCPeerConnection(configuration);
-    groupPeersRef.current[peerId] = pc;
-
-    // Add local stream tracks
+  // Handle group call
+  const handleGroupCall = (call, peerName) => {
+    console.log('🎥 Handling group call from:', peerName);
+    
     if (localStream) {
-      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-    }
-
-    // Handle remote stream
-    pc.ontrack = (event) => {
-      console.log('Received group remote stream from:', peerId, event.streams[0]);
-      setGroupParticipants(prev => {
-        const exists = prev.some(p => p.userId === peerId);
-        if (!exists) {
-          return [...prev, { userId: peerId, displayName, stream: event.streams[0] }];
-        } else {
-          return prev.map(p => p.userId === peerId ? { ...p, stream: event.streams[0] } : p);
-        }
-      });
-    };
-
-    // ICE candidate
-    pc.onicecandidate = (event) => {
-      if (event.candidate && socketRef.current && activeCall) {
-        socketRef.current.emit('group-ice-candidate', {
-          roomId: activeCall.groupId,
-          from: user.uid,
-          candidate: event.candidate
-        });
-      }
-    };
-
-    // Initiator creates offer
-    if (isInitiator) {
-      pc.onnegotiationneeded = async () => {
-        try {
-          const offer = await pc.createOffer();
-          await pc.setLocalDescription(offer);
-          if (socketRef.current && activeCall) {
-            socketRef.current.emit('group-offer', {
-              roomId: activeCall.groupId,
-              from: user.uid,
-              offer
-            });
+      call.answer(localStream);
+      
+      call.on('stream', (remoteStream) => {
+        console.log('🎥 Received group stream from:', peerName);
+        setGroupParticipants(prev => {
+          const existing = prev.find(p => p.userId === call.peer);
+          if (existing) {
+            return prev.map(p => p.userId === call.peer ? { ...p, stream: remoteStream } : p);
+          } else {
+            return [...prev, { userId: call.peer, displayName: peerName, stream: remoteStream }];
           }
-        } catch (e) {
-          console.error('Error creating group offer:', e);
-        }
-      };
+        });
+      });
+      
+      call.on('close', () => {
+        console.log('📞 Group call closed with:', peerName);
+        setGroupParticipants(prev => prev.filter(p => p.userId !== call.peer));
+      });
+      
+      call.on('error', (error) => {
+        console.error('❌ Group call error with:', peerName, error);
+        setGroupParticipants(prev => prev.filter(p => p.userId !== call.peer));
+      });
+      
+      groupPeersRef.current[call.peer] = call;
     }
   };
 
-  // Start outgoing call
+  // Start 1:1 call
   const startCall = async (friendId, friendName, groupId = null, groupName = null) => {
-    console.log('Starting call:', { friendId, friendName, groupId, groupName });
-    if (!socketRef.current || !user) return;
+    if (!localStream) {
+      const stream = await setupMediaStream();
+      if (!stream) return;
+    }
 
-    const stream = await setupMediaStream();
-    if (!stream) return;
-
+    const callType = groupId ? 'group' : '1:1';
     setActiveCall({
-      type: groupId ? 'group' : '1:1',
+      type: callType,
       friendId,
       friendName,
       groupId,
       groupName
     });
-    setCallStatus('calling');
 
-    if (groupId) {
-      // Group call - join the room
-      socketRef.current.emit('join-room', {
-        roomId: groupId,
-        userId: user.uid,
-        displayName: user.displayName || user.email
-      });
+    if (callType === '1:1') {
+      setCallStatus('calling');
+      
+      try {
+        // Create a peer ID for the friend
+        const friendPeerId = `user-${friendId}`;
+        
+        console.log('📞 Starting 1:1 call to:', friendPeerId);
+        const call = peerRef.current.call(friendPeerId, localStream);
+        callRef.current = call;
+        
+        call.on('stream', (remoteStream) => {
+          console.log('🎥 Received 1:1 stream from:', friendPeerId);
+          setRemoteStream(remoteStream);
+          setCallStatus('connected');
+        });
+        
+        call.on('close', () => {
+          console.log('📞 1:1 call closed with:', friendPeerId);
+          endCall();
+        });
+        
+        call.on('error', (error) => {
+          console.error('❌ 1:1 call error with:', friendPeerId, error);
+          endCall();
+        });
+        
+      } catch (error) {
+        console.error('❌ Error starting 1:1 call:', error);
+        setCallStatus('ended');
+      }
     } else {
-      // 1:1 call - create peer connection for outgoing call
-      createPeerConnection(stream);
-      socketRef.current.emit('call-request', {
-        to: friendId,
-        from: user.uid,
-        fromName: user.displayName || user.email,
-        groupId
-      });
+      // Group call - join the group and wait for others
+      setCallStatus('connected');
+      console.log('🎬 Joined group call:', groupId);
     }
   };
 
   // Accept incoming call
   const acceptCall = async () => {
-    console.log('Accepting incoming call:', incomingCall);
-    if (!incomingCall || !socketRef.current || !user) return;
+    if (!incomingCall || !localStream) return;
 
-    // Clear the notification immediately
-    setShowIncomingModal(false);
-    setIncomingCall(null);
-
-    const stream = await setupMediaStream();
-    if (!stream) return;
-
-    setActiveCall({
-      type: incomingCall.groupId ? 'group' : '1:1',
-      friendId: incomingCall.from,
-      friendName: incomingCall.fromName,
-      groupId: incomingCall.groupId
-    });
-    setCallStatus('connected');
-
-    socketRef.current.emit('call-accepted', {
-      to: incomingCall.from,
-      from: user.uid
-    });
-
-    createPeerConnection(stream);
-
-    // Create and send offer
     try {
-      const offer = await peerConnectionRef.current.createOffer();
-      await peerConnectionRef.current.setLocalDescription(offer);
-
-      socketRef.current.emit('offer', {
-        to: incomingCall.from,
-        from: user.uid,
-        offer: offer
-      });
+      if (activeCall && activeCall.type === '1:1') {
+        // For 1:1 calls, we need to call back the incoming peer
+        const call = peerRef.current.call(incomingCall.from, localStream);
+        callRef.current = call;
+        
+        call.on('stream', (remoteStream) => {
+          console.log('🎥 Received 1:1 stream from:', incomingCall.from);
+          setRemoteStream(remoteStream);
+          setCallStatus('connected');
+        });
+        
+        call.on('close', () => {
+          console.log('📞 1:1 call closed with:', incomingCall.from);
+          endCall();
+        });
+        
+        call.on('error', (error) => {
+          console.error('❌ 1:1 call error with:', incomingCall.from, error);
+          endCall();
+        });
+      }
+      
+      setShowIncomingModal(false);
+      setIncomingCall(null);
+      
     } catch (error) {
-      console.error('Error creating offer:', error);
+      console.error('❌ Error accepting call:', error);
     }
   };
 
   // Reject incoming call
   const rejectCall = () => {
-    if (!incomingCall || !socketRef.current || !user) return;
-
-    socketRef.current.emit('call-rejected', {
-      to: incomingCall.from,
-      from: user.uid
-    });
-
     setShowIncomingModal(false);
     setIncomingCall(null);
+    setCallStatus('ended');
   };
 
   // End call
   const endCall = () => {
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
+    if (callRef.current) {
+      callRef.current.close();
+      callRef.current = null;
     }
-
+    
     // Close all group peer connections
-    Object.values(groupPeersRef.current).forEach(pc => pc.close());
+    Object.values(groupPeersRef.current).forEach(call => {
+      call.close();
+    });
     groupPeersRef.current = {};
-
-    if (localStream) {
-      localStream.getTracks().forEach(track => track.stop());
-      setLocalStream(null);
-    }
-
+    
     setRemoteStream(null);
     setGroupParticipants([]);
+    setCallStatus('ended');
     setActiveCall(null);
-    setCallStatus('idle');
-
-    if (socketRef.current && activeCall) {
-      if (activeCall.type === 'group') {
-        socketRef.current.emit('leave-room', {
-          roomId: activeCall.groupId,
-          userId: user.uid
-        });
-      } else {
-        socketRef.current.emit('call-ended', {
-          to: activeCall.friendId,
-          from: user.uid
-        });
-      }
-    }
+    setShowIncomingModal(false);
+    setIncomingCall(null);
   };
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-      }
-      if (peerConnectionRef.current) {
-        peerConnectionRef.current.close();
-      }
-    };
-  }, [localStream]);
+  // Show incoming call notification
+  const showIncomingCall = (from, fromName) => {
+    console.log('🔔 Showing incoming call notification:', fromName);
+    // This could trigger a browser notification or sound
+  };
+
+  // Get pending call
+  const getPendingCall = () => {
+    return incomingCall;
+  };
+
+  // Clear pending call
+  const clearPendingCall = () => {
+    setIncomingCall(null);
+  };
+
+  const value = {
+    // State
+    activeCall,
+    localStream,
+    remoteStream,
+    groupParticipants,
+    callStatus,
+    connectionStatus,
+    incomingCall,
+    showIncomingModal,
+    localVideoRef,
+    remoteVideoRef,
+    
+    // Actions
+    startCall,
+    acceptCall,
+    rejectCall,
+    endCall,
+    showIncomingCall,
+    getPendingCall,
+    clearPendingCall,
+    setupMediaStream
+  };
 
   return (
-    <VideoCallContext.Provider value={{
-      socket: socketRef.current,
-      activeCall,
-      localStream,
-      remoteStream,
-      groupParticipants,
-      callStatus,
-      startCall,
-      acceptCall,
-      rejectCall,
-      endCall,
-      localVideoRef,
-      remoteVideoRef,
-      incomingCall,
-      showIncomingModal
-    }}>
+    <VideoCallContext.Provider value={value}>
       {children}
-      <IncomingCallModal
-        open={showIncomingModal}
-        callerName={incomingCall?.fromName || 'Unknown'}
-        onAccept={acceptCall}
-        onReject={rejectCall}
-      />
+      
+      {/* Global Incoming Call Modal */}
+      {showIncomingModal && incomingCall && (
+        <IncomingCallModal
+          fromName={incomingCall.fromName}
+          onAccept={acceptCall}
+          onReject={rejectCall}
+        />
+      )}
     </VideoCallContext.Provider>
   );
 };
