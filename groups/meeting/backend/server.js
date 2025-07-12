@@ -18,7 +18,7 @@ app.use(cors({
 
 // Create PeerJS server
 const peerServer = PeerServer({
-    port: process.env.PEER_SERVER_PORT || 9000,
+    port: process.env.PORT || 5003, // Use the same port as the main server
     path: '/peerjs',
     allow_discovery: true,
     proxied: process.env.NODE_ENV === 'production',
