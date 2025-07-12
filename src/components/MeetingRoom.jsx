@@ -29,7 +29,7 @@ const MeetingRoom = ({ groupId, userName }) => {
     
     peerRef.current = new Peer(peerId, {
       host: host,
-      port: import.meta.env.VITE_PEER_SERVER_PORT || 443, // Use 443 for Render HTTPS
+      port: import.meta.env.VITE_PEER_SERVER_PORT || 10000, // Use Render's assigned port
       path: '/peerjs',
       secure: import.meta.env.VITE_PEER_SERVER_SECURE === 'true' || import.meta.env.PROD,
       config: {
