@@ -28,19 +28,21 @@ export const VideoCallProvider = ({ children }) => {
     if (peerRef.current) return;
 
     console.log('Initializing global PeerJS for user:', user.uid);
-    
+
     // Create a unique peer ID for this user
     const peerId = `user-${user.uid}-${Date.now()}`;
-    
-        // Temporary: Use public PeerJS server for testing
+
+    // Temporary: Use public PeerJS server for testing
     console.log('🔧 Using public PeerJS server for testing');
-    
+
     peerRef.current = new Peer(peerId, {
       host: 'peerjs-server.herokuapp.com',
       port: 443,
       path: '/peerjs',
       secure: true,
+    }); // <-- Close the config object here
 
+    // Now add event handlers
     peerRef.current.on('open', (id) => {
       console.log('✅ Global PeerJS connected with ID:', id);
       setConnectionStatus('connected');
@@ -49,13 +51,11 @@ export const VideoCallProvider = ({ children }) => {
     peerRef.current.on('error', (error) => {
       console.error('❌ Global PeerJS error:', error);
       setConnectionStatus('error');
-      
       // Handle specific error types
       if (error.type === 'peer-unavailable') {
         console.log('⚠️ Peer is unavailable');
       } else if (error.type === 'network') {
         console.log('⚠️ Network error, attempting to reconnect...');
-        // Try to reconnect after a delay
         setTimeout(() => {
           if (peerRef.current) {
             peerRef.current.reconnect();
@@ -74,7 +74,7 @@ export const VideoCallProvider = ({ children }) => {
     // Handle incoming calls
     peerRef.current.on('call', async (call) => {
       console.log('📞 Global incoming call from:', call.peer);
-      
+
       // For 1:1 calls, check if it's from a friend
       if (activeCall && activeCall.type === '1:1' && call.peer.includes(activeCall.friendId)) {
         setIncomingCall({
@@ -119,10 +119,10 @@ export const VideoCallProvider = ({ children }) => {
   // Handle group call
   const handleGroupCall = (call, peerName) => {
     console.log('🎥 Handling group call from:', peerName);
-    
+
     if (localStream) {
       call.answer(localStream);
-      
+
       call.on('stream', (remoteStream) => {
         console.log('🎥 Received group stream from:', peerName);
         setGroupParticipants(prev => {
@@ -134,17 +134,17 @@ export const VideoCallProvider = ({ children }) => {
           }
         });
       });
-      
+
       call.on('close', () => {
         console.log('📞 Group call closed with:', peerName);
         setGroupParticipants(prev => prev.filter(p => p.userId !== call.peer));
       });
-      
+
       call.on('error', (error) => {
         console.error('❌ Group call error with:', peerName, error);
         setGroupParticipants(prev => prev.filter(p => p.userId !== call.peer));
       });
-      
+
       groupPeersRef.current[call.peer] = call;
     }
   };
@@ -167,31 +167,31 @@ export const VideoCallProvider = ({ children }) => {
 
     if (callType === '1:1') {
       setCallStatus('calling');
-      
+
       try {
         // Create a peer ID for the friend
         const friendPeerId = `user-${friendId}`;
-        
+
         console.log('📞 Starting 1:1 call to:', friendPeerId);
         const call = peerRef.current.call(friendPeerId, localStream);
         callRef.current = call;
-        
+
         call.on('stream', (remoteStream) => {
           console.log('🎥 Received 1:1 stream from:', friendPeerId);
           setRemoteStream(remoteStream);
           setCallStatus('connected');
         });
-        
+
         call.on('close', () => {
           console.log('📞 1:1 call closed with:', friendPeerId);
           endCall();
         });
-        
+
         call.on('error', (error) => {
           console.error('❌ 1:1 call error with:', friendPeerId, error);
           endCall();
         });
-        
+
       } catch (error) {
         console.error('❌ Error starting 1:1 call:', error);
         setCallStatus('ended');
@@ -212,27 +212,27 @@ export const VideoCallProvider = ({ children }) => {
         // For 1:1 calls, we need to call back the incoming peer
         const call = peerRef.current.call(incomingCall.from, localStream);
         callRef.current = call;
-        
+
         call.on('stream', (remoteStream) => {
           console.log('🎥 Received 1:1 stream from:', incomingCall.from);
           setRemoteStream(remoteStream);
           setCallStatus('connected');
         });
-        
+
         call.on('close', () => {
           console.log('📞 1:1 call closed with:', incomingCall.from);
           endCall();
         });
-        
+
         call.on('error', (error) => {
           console.error('❌ 1:1 call error with:', incomingCall.from, error);
           endCall();
         });
       }
-      
+
       setShowIncomingModal(false);
       setIncomingCall(null);
-      
+
     } catch (error) {
       console.error('❌ Error accepting call:', error);
     }
@@ -251,13 +251,13 @@ export const VideoCallProvider = ({ children }) => {
       callRef.current.close();
       callRef.current = null;
     }
-    
+
     // Close all group peer connections
     Object.values(groupPeersRef.current).forEach(call => {
       call.close();
     });
     groupPeersRef.current = {};
-    
+
     setRemoteStream(null);
     setGroupParticipants([]);
     setCallStatus('ended');
@@ -294,7 +294,7 @@ export const VideoCallProvider = ({ children }) => {
     showIncomingModal,
     localVideoRef,
     remoteVideoRef,
-    
+
     // Actions
     startCall,
     acceptCall,
@@ -309,7 +309,7 @@ export const VideoCallProvider = ({ children }) => {
   return (
     <VideoCallContext.Provider value={value}>
       {children}
-      
+
       {/* Global Incoming Call Modal */}
       {showIncomingModal && incomingCall && (
         <IncomingCallModal
