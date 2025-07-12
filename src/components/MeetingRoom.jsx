@@ -24,6 +24,7 @@ const MeetingRoom = ({ groupId, userName }) => {
   const localStream = useRef();
   // Add a ref object to store refs for each remote participant
   const remoteVideoRefs = useRef({});
+  const makingOffer = useRef(false);
 
   // Connect socket
   useEffect(() => {
@@ -177,7 +178,11 @@ const MeetingRoom = ({ groupId, userName }) => {
           });
         } else if (data.type === "answer") {
           console.log('📥 Processing answer from:', sender);
-          await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+          if (pc.signalingState === "have-local-offer") {
+            await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+          } else {
+            console.warn('⚠️ Skipping setRemoteDescription(answer): wrong signaling state', pc.signalingState);
+          }
         } else if (data.type === "candidate") {
           console.log('📥 Processing ICE candidate from:', sender);
           await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
@@ -293,6 +298,8 @@ const MeetingRoom = ({ groupId, userName }) => {
     if (isInitiator) {
       pc.onnegotiationneeded = async () => {
         try {
+          if (makingOffer.current) return;
+          makingOffer.current = true;
           console.log('🔄 Negotiation needed for peer:', peerId);
           const offer = await pc.createOffer();
           await pc.setLocalDescription(offer);
@@ -303,6 +310,8 @@ const MeetingRoom = ({ groupId, userName }) => {
           });
         } catch (e) {
           console.error('❌ Error creating offer for peer:', peerId, e);
+        } finally {
+          makingOffer.current = false;
         }
       };
     }
