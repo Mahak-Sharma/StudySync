@@ -34,6 +34,10 @@ const userRooms = new Map(); // userId -> roomId
 // Video call rooms
 const videoRooms = new Map(); // roomId -> { participants: Set, host: userId }
 
+// Meeting rooms (for group video calls)
+const meetingRooms = {}; // roomId -> Set of socket IDs
+const meetingRoomNames = {}; // roomId -> { socketId: name }
+
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
@@ -158,7 +162,55 @@ io.on('connection', (socket) => {
         }
     });
 
+    // --- MEETING ROOM FUNCTIONALITY (Group Video Calls) ---
+    
+    // Join a meeting room
+    socket.on('join-room', ({ roomId, name }) => {
+        console.log(`User ${name} (${socket.id}) joining meeting room ${roomId}`);
+        socket.join(roomId);
+        if (!meetingRooms[roomId]) meetingRooms[roomId] = new Set();
+        if (!meetingRoomNames[roomId]) meetingRoomNames[roomId] = {};
+        meetingRooms[roomId].add(socket.id);
+        meetingRoomNames[roomId][socket.id] = name || socket.id;
+        
+        // Send current participants (with names) to the new user
+        socket.emit('participants', Object.entries(meetingRoomNames[roomId]).map(([id, n]) => ({ id, name: n })));
+        // Notify others
+        socket.to(roomId).emit('user-joined', { id: socket.id, name: name || socket.id });
+    });
+
+    // Announce presence in a meeting room
+    socket.on('announce', ({ groupId, userId, name }) => {
+        console.log(`User ${name} (${userId}) announcing in meeting group ${groupId}`);
+        if (!meetingRooms[groupId]) meetingRooms[groupId] = new Set();
+        if (!meetingRoomNames[groupId]) meetingRoomNames[groupId] = {};
+        meetingRooms[groupId].add(userId);
+        meetingRoomNames[groupId][userId] = name || userId;
+        io.to(groupId).emit('announce', { userId, name: name || userId });
+        io.to(groupId).emit('participants', Object.entries(meetingRoomNames[groupId]).map(([id, n]) => ({ id, name: n })));
+    });
+
+    // Handle WebRTC signaling for meeting rooms
+    socket.on('signal', ({ roomId, data }) => {
+        console.log(`Meeting signal from ${socket.id} in room ${roomId}:`, data.type);
+        socket.to(roomId).emit('signal', { sender: socket.id, data });
+    });
+
     // Handle disconnection
+    socket.on('disconnecting', () => {
+        console.log(`User ${socket.id} disconnecting from rooms:`, Array.from(socket.rooms));
+        
+        // Handle meeting room disconnection
+        for (const roomId of socket.rooms) {
+            if (roomId !== socket.id) {
+                socket.to(roomId).emit('user-left', socket.id);
+                if (meetingRooms[roomId]) meetingRooms[roomId].delete(socket.id);
+                if (meetingRoomNames[roomId]) delete meetingRoomNames[roomId][socket.id];
+                io.to(roomId).emit('participants', Object.entries(meetingRoomNames[roomId] || {}).map(([id, n]) => ({ id, name: n })));
+            }
+        }
+    });
+
     socket.on('disconnect', () => {
         const userId = userSockets.get(socket.id);
         
@@ -175,6 +227,8 @@ io.on('connection', (socket) => {
                 timestamp: Date.now()
             });
         }
+        
+        console.log('User disconnected:', socket.id);
     });
 
     // --- Group Video Call (Room) Support ---
@@ -221,6 +275,7 @@ app.get('/health', (req, res) => {
     res.json({
         status: 'ok',
         activeUsers: activeUsers.size,
+        meetingRooms: Object.keys(meetingRooms).length,
         timestamp: Date.now()
     });
 });
@@ -234,11 +289,25 @@ app.get('/users', (req, res) => {
     });
 });
 
+// Get meeting rooms (for debugging)
+app.get('/meeting-rooms', (req, res) => {
+    const rooms = Object.keys(meetingRooms).map(roomId => ({
+        roomId,
+        participants: Array.from(meetingRooms[roomId] || []),
+        participantNames: meetingRoomNames[roomId] || {}
+    }));
+    res.json({
+        rooms: rooms,
+        count: rooms.length
+    });
+});
+
 const PORT = process.env.PORT || 5002;
 
 server.listen(PORT, () => {
     console.log(`🎥 Video call server running on port ${PORT}`);
     console.log(`📡 Socket.IO server ready for WebRTC signaling`);
+    console.log(`🤝 Meeting room functionality enabled`);
 });
 
 module.exports = { app, server, io }; 

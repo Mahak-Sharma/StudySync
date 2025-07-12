@@ -1,11 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
+import "./MeetingRoom.css";
 
 // Set SERVER_URL for production and development
 const SERVER_URL =
-  import.meta.env.VITE_VIDEO_CALL_SERVER_URL ||
-  'https://studysync-enqu.onrender.com'; // Hosted backend for production
-// Example: For VS Code Forwarded Port, set VITE_VIDEO_CALL_SERVER_URL to the public URL provided by VS Code
+  import.meta.env.VITE_MEETING_SERVER_URL ||
+  (import.meta.env.PROD 
+    ? 'https://studysync-enqu.onrender.com' // Use the integrated server
+    : 'http://localhost:5002'); // Local video call server (now includes meeting functionality)
+// The video call server now handles both 1:1 calls and group meetings
 
 const MeetingRoom = ({ groupId, userName }) => {
   const [joined, setJoined] = useState(false);
@@ -14,6 +17,7 @@ const MeetingRoom = ({ groupId, userName }) => {
   const [participants, setParticipants] = useState([]); // [{id, name}]
   const [peerStreams, setPeerStreams] = useState([]); // [{id, name, stream}]
   const [leaving, setLeaving] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('disconnected'); // disconnected, connecting, connected, error
   const localVideoRef = useRef();
   const socketRef = useRef();
   const peerConnections = useRef({});
@@ -23,13 +27,42 @@ const MeetingRoom = ({ groupId, userName }) => {
 
   // Connect socket
   useEffect(() => {
+    console.log('Connecting to meeting server:', SERVER_URL);
+    console.log('Environment:', import.meta.env.PROD ? 'production' : 'development');
+    
     socketRef.current = io(SERVER_URL, {
-      transports: ['websocket'],
+      transports: ['websocket', 'polling'], // Fallback to polling if websocket fails
       secure: SERVER_URL.startsWith('https'),
       withCredentials: true,
+      timeout: 20000, // 20 second timeout
+      forceNew: true
     });
+
+    socketRef.current.on('connect', () => {
+      console.log('✅ Connected to meeting server');
+      setConnectionStatus('connected');
+    });
+
+    socketRef.current.on('connect_error', (error) => {
+      console.error('❌ Failed to connect to meeting server:', error);
+      console.error('Server URL:', SERVER_URL);
+      console.error('Error details:', error.message);
+      setConnectionStatus('error');
+    });
+
+    socketRef.current.on('disconnect', (reason) => {
+      console.log('🔌 Disconnected from meeting server:', reason);
+    });
+
+    socketRef.current.on('error', (error) => {
+      console.error('🚨 Socket error:', error);
+    });
+
     return () => {
-      socketRef.current.disconnect();
+      if (socketRef.current) {
+        console.log('Cleaning up socket connection');
+        socketRef.current.disconnect();
+      }
     };
   }, []);
 
@@ -58,8 +91,19 @@ const MeetingRoom = ({ groupId, userName }) => {
         remoteVideoRefs.current[peer.id] &&
         remoteVideoRefs.current[peer.id].current
       ) {
-        remoteVideoRefs.current[peer.id].current.srcObject = peer.stream;
-        remoteVideoRefs.current[peer.id].current.play?.();
+        console.log('Setting stream for peer:', peer.id, peer.stream);
+        console.log('Video tracks:', peer.stream.getVideoTracks());
+        console.log('Audio tracks:', peer.stream.getAudioTracks());
+        
+        const videoElement = remoteVideoRefs.current[peer.id].current;
+        videoElement.srcObject = peer.stream;
+        
+        // Force play the video
+        videoElement.play().then(() => {
+          console.log('✅ Successfully playing video for peer:', peer.id);
+        }).catch(error => {
+          console.error('❌ Error playing video for peer:', peer.id, error);
+        });
       }
     });
   }, [peerStreams]);
@@ -107,25 +151,37 @@ const MeetingRoom = ({ groupId, userName }) => {
 
     // Handle signaling
     socket.on("signal", async ({ sender, data }) => {
+      console.log('📨 Received signal from', sender, 'type:', data.type);
+      
       let pc = peerConnections.current[sender];
       if (!pc) {
         // Defensive: create if missing
         const peerName =
           participants.find((p) => p.id === sender)?.name || sender;
+        console.log('🆕 Creating missing peer connection for:', sender);
         pc = createPeerConnection(sender, peerName, false);
       }
-      if (data.type === "offer") {
-        await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        socket.emit("signal", {
-          roomId: groupId,
-          data: { type: "answer", answer, to: sender },
-        });
-      } else if (data.type === "answer") {
-        await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
-      } else if (data.type === "candidate") {
-        await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+      
+      try {
+        if (data.type === "offer") {
+          console.log('📥 Processing offer from:', sender);
+          await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          console.log('📤 Sending answer to:', sender);
+          socket.emit("signal", {
+            roomId: groupId,
+            data: { type: "answer", answer, to: sender },
+          });
+        } else if (data.type === "answer") {
+          console.log('📥 Processing answer from:', sender);
+          await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+        } else if (data.type === "candidate") {
+          console.log('📥 Processing ICE candidate from:', sender);
+          await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+        }
+      } catch (error) {
+        console.error('❌ Error processing signal from', sender, ':', error);
       }
     });
 
@@ -185,37 +241,66 @@ const MeetingRoom = ({ groupId, userName }) => {
     // ICE connection state debugging
     pc.oniceconnectionstatechange = () => {
       console.log('ICE connection state with', peerId, ':', pc.iceConnectionState);
+      if (pc.iceConnectionState === 'connected') {
+        console.log('✅ WebRTC connection established with', peerId);
+      } else if (pc.iceConnectionState === 'failed') {
+        console.error('❌ WebRTC connection failed with', peerId);
+      }
+    };
+
+    // Connection state debugging
+    pc.onconnectionstatechange = () => {
+      console.log('Connection state with', peerId, ':', pc.connectionState);
     };
 
     // Track
     pc.ontrack = (event) => {
-      console.log('Received remote track from', peerId, event.track.kind, event.track);
-      console.log('All remote tracks:', event.streams[0].getTracks());
-      setPeerStreams((prev) => {
-        // Only add if not already present
-        if (prev.some((p) => p.id === peerId))
-          return prev.map((p) =>
-            p.id === peerId ? { ...p, stream: event.streams[0] } : p
-          );
-        return [
-          ...prev,
-          { id: peerId, name: peerName, stream: event.streams[0] },
-        ];
-      });
+      console.log('🎥 Received remote track from', peerId, event.track.kind, event.track);
+      console.log('📊 All remote tracks:', event.streams[0].getTracks());
+      console.log('🆔 Stream ID:', event.streams[0].id);
+      console.log('✅ Stream active:', event.streams[0].active);
+      console.log('🎬 Stream readyState:', event.streams[0].readyState);
+      
+      if (event.streams && event.streams[0]) {
+        const stream = event.streams[0];
+        console.log('🎯 Adding stream to peerStreams for peer:', peerId);
+        console.log('📹 Video tracks in stream:', stream.getVideoTracks().length);
+        console.log('🔊 Audio tracks in stream:', stream.getAudioTracks().length);
+        
+        setPeerStreams((prev) => {
+          // Only add if not already present
+          if (prev.some((p) => p.id === peerId)) {
+            console.log('🔄 Updating existing peer stream for:', peerId);
+            return prev.map((p) =>
+              p.id === peerId ? { ...p, stream: stream } : p
+            );
+          } else {
+            console.log('➕ Adding new peer stream for:', peerId);
+            return [
+              ...prev,
+              { id: peerId, name: peerName, stream: stream },
+            ];
+          }
+        });
+      } else {
+        console.error('❌ No streams received from peer:', peerId);
+      }
     };
 
     // Offer/Answer
     if (isInitiator) {
       pc.onnegotiationneeded = async () => {
         try {
+          console.log('🔄 Negotiation needed for peer:', peerId);
           const offer = await pc.createOffer();
           await pc.setLocalDescription(offer);
+          console.log('📤 Sending offer to peer:', peerId);
           socketRef.current.emit("signal", {
             roomId: groupId,
             data: { type: "offer", offer, to: peerId },
           });
         } catch (e) {
-          /* ignore */
+          console.error('❌ Error creating offer for peer:', peerId, e);
         }
       };
     }
@@ -299,12 +384,54 @@ const MeetingRoom = ({ groupId, userName }) => {
   return (
     <div className="meeting-room">
       <h2>Meeting Room: {groupId}</h2>
+      
+      {/* Connection Status */}
+      <div style={{ 
+        padding: '8px 12px', 
+        marginBottom: '16px', 
+        borderRadius: '4px',
+        backgroundColor: connectionStatus === 'connected' ? '#4caf50' : 
+                        connectionStatus === 'connecting' ? '#ff9800' : 
+                        connectionStatus === 'error' ? '#f44336' : '#9e9e9e',
+        color: 'white',
+        fontSize: '14px'
+      }}>
+        Status: {connectionStatus === 'connected' ? 'Connected' : 
+                connectionStatus === 'connecting' ? 'Connecting...' : 
+                connectionStatus === 'error' ? 'Connection Error' : 'Disconnected'}
+      </div>
+      
       {!joined ? (
-        <button onClick={joinRoom}>Join Meeting</button>
+        <button 
+          onClick={joinRoom} 
+          disabled={connectionStatus !== 'connected'}
+          style={{
+            opacity: connectionStatus !== 'connected' ? 0.5 : 1,
+            cursor: connectionStatus !== 'connected' ? 'not-allowed' : 'pointer'
+          }}
+        >
+          {connectionStatus === 'connected' ? 'Join Meeting' : 
+           connectionStatus === 'connecting' ? 'Connecting...' : 
+           connectionStatus === 'error' ? 'Connection Failed' : 'Waiting for Connection...'}
+        </button>
       ) : (
         <div>
           {/* Local video */}
-          <video ref={localVideoRef} autoPlay muted playsInline className="local-video" />
+          <video 
+            ref={localVideoRef} 
+            autoPlay 
+            muted 
+            playsInline 
+            className="local-video"
+            style={{
+              width: "300px",
+              height: "225px",
+              backgroundColor: "#000",
+              borderRadius: "8px",
+              border: "2px solid #4caf50",
+              marginBottom: "16px"
+            }}
+          />
           <div>
             <button onClick={toggleMic}>
               {micOn ? "Mute Mic" : "Unmute Mic"}
@@ -328,37 +455,84 @@ const MeetingRoom = ({ groupId, userName }) => {
               {leaving ? "Leaving..." : "Leave Meeting"}
             </button>
           </div>
-          <h3>Participants</h3>
+          <h3>Participants ({participants.length})</h3>
           <ul style={{ marginBottom: 12 }}>
             {participants.map((p) => (
               <li
                 key={p.id}
                 style={{
                   fontWeight: p.id === socketRef.current.id ? 700 : 400,
+                  padding: "4px 0"
                 }}
               >
                 {p.id === socketRef.current.id ? "You" : p.name}
+                {peerConnections.current[p.id] && (
+                  <span style={{ 
+                    marginLeft: "8px", 
+                    fontSize: "12px",
+                    color: peerConnections.current[p.id].connectionState === 'connected' ? '#4caf50' : '#ff9800'
+                  }}>
+                    ({peerConnections.current[p.id].connectionState})
+                  </span>
+                )}
               </li>
             ))}
           </ul>
+          
+          {/* Debug Info */}
+          <div style={{ 
+            background: "#f5f5f5", 
+            padding: "12px", 
+            borderRadius: "4px", 
+            marginBottom: "16px",
+            fontSize: "12px"
+          }}>
+            <strong>Debug Info:</strong>
+            <div>Peer Connections: {Object.keys(peerConnections.current).length}</div>
+            <div>Peer Streams: {peerStreams.length}</div>
+            <div>Local Stream: {localStream.current ? 'Active' : 'None'}</div>
+            {localStream.current && (
+              <div>
+                Local Video Tracks: {localStream.current.getVideoTracks().length}
+                Local Audio Tracks: {localStream.current.getAudioTracks().length}
+              </div>
+            )}
+          </div>
           {/* Remote videos */}
-          <div style={{ display: "flex", gap: 16 }}>
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
             {peerStreams.map(peer => {
               // Create a ref for each peer if it doesn't exist
               if (!remoteVideoRefs.current[peer.id]) {
                 remoteVideoRefs.current[peer.id] = React.createRef();
               }
               return (
-                <div key={peer.id} style={{ position: "relative" }}>
+                <div key={peer.id} style={{ position: "relative", minWidth: "300px", minHeight: "225px" }}>
                   <video
                     ref={remoteVideoRefs.current[peer.id]}
                     autoPlay
                     playsInline
                     className="remote-video"
-                    // srcObject is set via ref and useEffect
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      minWidth: "300px",
+                      minHeight: "225px",
+                      backgroundColor: "#000",
+                      borderRadius: "8px",
+                      border: "2px solid #1976d2"
+                    }}
+                    onLoadedMetadata={() => {
+                      console.log('Video metadata loaded for peer:', peer.id);
+                    }}
+                    onCanPlay={() => {
+                      console.log('Video can play for peer:', peer.id);
+                    }}
+                    onError={(e) => {
+                      console.error('Video error for peer:', peer.id, e);
+                    }}
                   />
                   {/* Black overlay if no video track */}
-                  {!peer.stream.getVideoTracks().length && (
+                  {(!peer.stream || !peer.stream.getVideoTracks().length) && (
                     <div
                       style={{
                         position: "absolute",
@@ -367,22 +541,48 @@ const MeetingRoom = ({ groupId, userName }) => {
                         width: "100%",
                         height: "100%",
                         background: "#000",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "#fff",
+                        borderRadius: "8px"
                       }}
-                    />
+                    >
+                      <div>
+                        <div>📹</div>
+                        <div>Camera Off</div>
+                      </div>
+                    </div>
                   )}
                   <div
                     style={{
                       position: "absolute",
-                      bottom: 4,
-                      left: 4,
+                      bottom: 8,
+                      left: 8,
                       color: "#fff",
-                      background: "rgba(0,0,0,0.5)",
-                      padding: "2px 8px",
+                      background: "rgba(0,0,0,0.7)",
+                      padding: "4px 12px",
                       borderRadius: 4,
-                      fontSize: 12,
+                      fontSize: 14,
+                      fontWeight: "bold"
                     }}
                   >
                     {peer.name}
+                  </div>
+                  {/* Debug info */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 8,
+                      right: 8,
+                      color: "#fff",
+                      background: "rgba(0,0,0,0.7)",
+                      padding: "2px 8px",
+                      borderRadius: 4,
+                      fontSize: 12
+                    }}
+                  >
+                    {peer.stream ? `${peer.stream.getVideoTracks().length}V ${peer.stream.getAudioTracks().length}A` : 'No Stream'}
                   </div>
                 </div>
               );
