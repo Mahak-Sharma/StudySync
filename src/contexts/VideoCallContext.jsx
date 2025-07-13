@@ -31,18 +31,6 @@ export const VideoCallProvider = ({ children }) => {
 
     // Create a unique peer ID for this user
     const peerId = `user-${user.uid}-${Date.now()}`;
-<<<<<<< HEAD
-
-    // Temporary: Use public PeerJS server for testing
-    console.log('🔧 Using Render backend for PeerJS signaling');
-
-    peerRef.current = new Peer(peerId, {
-      host: 'studysync-enqu.onrender.com',
-      port: 443,
-      path: '/peerjs',
-      secure: true,
-    }); // <-- Close the config object here
-=======
     
     // Clean up host URL - remove protocol if present
     const host = (import.meta.env.VITE_PEER_SERVER_HOST || 'studysync-enqu.onrender.com').replace(/^https?:\/\//, '');
@@ -72,7 +60,6 @@ export const VideoCallProvider = ({ children }) => {
         ]
       }
     });
->>>>>>> 4ac216657b6331e49fad08bc5c18de19114ff827
 
     // Now add event handlers
     peerRef.current.on('open', (id) => {
