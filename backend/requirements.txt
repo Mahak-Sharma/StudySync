@@ -11,3 +11,5 @@ transformers==4.35.0
 torch==2.0.0+cpu
 huggingface-hub==0.16.4
 accelerate==0.20.3
+
+--extra-index-url https://download.pytorch.org/whl/cpu
