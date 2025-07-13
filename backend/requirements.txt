@@ -5,8 +5,9 @@ python-docx==0.8.11
 Pillow==10.0.1
 pytesseract==0.3.10
 numpy==1.26.4
+
+# Lighter versions for faster setup
 transformers==4.35.0
-torch==2.1.0
-werkzeug==2.3.7
+torch==2.0.0+cpu
 huggingface-hub==0.16.4
-accelerate==0.20.3 
+accelerate==0.20.3
