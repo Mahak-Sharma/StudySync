@@ -82,5 +82,14 @@ def delete_summary_endpoint(summary_id):
     except Exception as e:
         return jsonify({'error': f'Error deleting summary: {str(e)}'}), 500
 
+<<<<<<< HEAD
 if __name__ == '__main__':
     app.run(debug=True, port=5001) 
+=======
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({'status': 'healthy', 'service': 'summarize-api'}), 200
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5001, host='0.0.0.0') 
+>>>>>>> 4ac216657b6331e49fad08bc5c18de19114ff827

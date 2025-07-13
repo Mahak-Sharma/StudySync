@@ -24,10 +24,17 @@ const MeetingRoom = ({ groupId, userName }) => {
         const peerId = `${groupId}-${userName}-${Date.now()}`;
         
         peerRef.current = new Peer(peerId, {
+<<<<<<< HEAD
             host: import.meta.env.VITE_PEER_SERVER_HOST || 'localhost',
             port: import.meta.env.VITE_PEER_SERVER_PORT || 9000,
             path: '/peerjs',
             secure: import.meta.env.PROD,
+=======
+            host: import.meta.env.VITE_PEER_SERVER_HOST || 'studysync-enqu.onrender.com',
+            port: import.meta.env.VITE_PEER_SERVER_PORT || 443,
+            path: '/peerjs',
+            secure: true,
+>>>>>>> 4ac216657b6331e49fad08bc5c18de19114ff827
             config: {
                 iceServers: [
                     { urls: "stun:stun.l.google.com:19302" },

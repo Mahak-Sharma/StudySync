@@ -9,7 +9,13 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "dev:all": "node start-dev.js",
+<<<<<<< HEAD
     "start": "node start-dev.js"
+=======
+    "start": "node start-dev.js",
+    "deploy": "npm run build && firebase deploy",
+    "deploy:hosting": "firebase deploy --only hosting"
+>>>>>>> 4ac216657b6331e49fad08bc5c18de19114ff827
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -22,8 +28,12 @@
     "firebase": "^11.10.0",
     "firebase-admin": "^13.4.0",
     "framer-motion": "^12.23.0",
+<<<<<<< HEAD
     "peer": "^1.0.2",
     "peerjs": "^1.5.5",
+=======
+    "peerjs": "^1.5.1",
+>>>>>>> 4ac216657b6331e49fad08bc5c18de19114ff827
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.5.0",

@@ -31,7 +31,11 @@ const MeetingRoom = ({ groupId, userName }) => {
       host: host,
       port: import.meta.env.VITE_PEER_SERVER_PORT || 443, // Use standard HTTPS port
       path: '/peerjs',
+<<<<<<< HEAD
       secure: import.meta.env.VITE_PEER_SERVER_SECURE === 'true' || import.meta.env.PROD,
+=======
+      secure: true, // Always use secure for production
+>>>>>>> 4ac216657b6331e49fad08bc5c18de19114ff827
       config: {
         iceServers: [
           { urls: "stun:stun.l.google.com:19302" },
