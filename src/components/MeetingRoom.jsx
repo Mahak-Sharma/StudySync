@@ -24,14 +24,11 @@ const MeetingRoom = ({ groupId, userName }) => {
     // Create a unique peer ID for this user in this room
     const peerId = `${groupId}-${userName}-${Date.now()}`;
     
-    // Clean up host URL - remove protocol if present
-    const host = (import.meta.env.VITE_PEER_SERVER_HOST || 'studysync-enqu.onrender.com').replace(/^https?:\/\//, '');
-    
     peerRef.current = new Peer(peerId, {
-      host: host,
-      port: import.meta.env.VITE_PEER_SERVER_PORT || 443, // Use standard HTTPS port
+      host: import.meta.env.VITE_PEER_SERVER_HOST || 'localhost',
+      port: import.meta.env.VITE_PEER_SERVER_PORT || 9000,
       path: '/peerjs',
-      secure: true, // Always use secure for production
+      secure: import.meta.env.PROD,
       config: {
         iceServers: [
           { urls: "stun:stun.l.google.com:19302" },
@@ -203,20 +200,7 @@ const MeetingRoom = ({ groupId, userName }) => {
   const callPeer = async (peerId) => {
     if (!localStream.current || !peerRef.current) return;
     
-    // Don't call if already connected
-    if (peerConnections.current[peerId]) {
-      console.log('⚠️ Already connected to peer:', peerId);
-      return;
-    }
-    
     console.log('📞 Calling peer:', peerId);
-    
-    // Set connecting status
-    setParticipants(prev => prev.map(p => 
-      p.id === peerId 
-        ? { ...p, status: 'connecting', error: null }
-        : p
-    ));
     
     try {
       const call = peerRef.current.call(peerId, localStream.current);
@@ -224,13 +208,6 @@ const MeetingRoom = ({ groupId, userName }) => {
       call.on('stream', (remoteStream) => {
         console.log('🎥 Received stream from:', peerId);
         handleRemoteStream(peerId, remoteStream);
-        
-        // Clear connecting status on success
-        setParticipants(prev => prev.map(p => 
-          p.id === peerId 
-            ? { ...p, status: 'connected', error: null }
-            : p
-        ));
       });
       
       call.on('close', () => {
@@ -240,37 +217,13 @@ const MeetingRoom = ({ groupId, userName }) => {
       
       call.on('error', (error) => {
         console.error('❌ Call error with:', peerId, error);
-        
-        // Handle different types of errors
-        if (error.type === 'peer-unavailable' || error.message?.includes('Could not connect to peer')) {
-          console.log('⚠️ Peer is unavailable or offline:', peerId);
-          // Show user-friendly message
-          setParticipants(prev => prev.map(p => 
-            p.id === peerId 
-              ? { ...p, status: 'offline', error: 'User is offline or not available' }
-              : p
-          ));
-        } else if (error.type === 'network') {
-          console.log('⚠️ Network error with peer:', peerId);
-          setParticipants(prev => prev.map(p => 
-            p.id === peerId 
-              ? { ...p, status: 'error', error: 'Network connection failed' }
-              : p
-          ));
-        } else {
-          console.log('❌ Removing peer due to error:', peerId);
-          removePeer(peerId);
-        }
+        removePeer(peerId);
       });
       
       peerConnections.current[peerId] = call;
       
     } catch (error) {
       console.error('❌ Error calling peer:', peerId, error);
-      // Show user-friendly error message
-      if (error.message.includes('Could not connect to peer')) {
-        console.log('⚠️ Peer is offline or not available');
-      }
     }
   };
 
@@ -345,22 +298,13 @@ const MeetingRoom = ({ groupId, userName }) => {
         color: 'white',
         fontSize: '14px'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>
-            Status: {connectionStatus === 'connected' ? 'Connected to PeerJS Server' :
-              connectionStatus === 'connecting' ? 'Connecting to PeerJS Server...' :
-                connectionStatus === 'error' ? 'Connection Error - Check Server' : 'Disconnected'}
+        Status: {connectionStatus === 'connected' ? 'Connected' :
+          connectionStatus === 'connecting' ? 'Connecting...' :
+            connectionStatus === 'error' ? 'Connection Error' : 'Disconnected'}
+        {connectionStatus === 'connected' && peerRef.current && (
+          <span style={{ marginLeft: '8px', fontSize: '12px' }}>
+            (ID: {peerRef.current.id})
           </span>
-          {connectionStatus === 'connected' && peerRef.current && (
-            <span style={{ fontSize: '12px', opacity: 0.8 }}>
-              ID: {peerRef.current.id}
-            </span>
-          )}
-        </div>
-        {connectionStatus === 'error' && (
-          <div style={{ fontSize: '12px', marginTop: '4px', opacity: 0.9 }}>
-            Make sure the PeerJS server is running on port 9000
-          </div>
         )}
       </div>
 
@@ -426,95 +370,19 @@ const MeetingRoom = ({ groupId, userName }) => {
                 key={p.id}
                 style={{
                   fontWeight: p.id === peerRef.current?.id ? 700 : 400,
-                  padding: "8px 12px",
-                  margin: "4px 0",
-                  borderRadius: "4px",
-                  backgroundColor: p.status === 'error' ? '#ffebee' : 
-                    p.status === 'offline' ? '#fff3e0' : 
-                    p.status === 'connecting' ? '#e3f2fd' :
-                    peerConnections.current[p.id] ? '#e8f5e8' : '#f5f5f5',
-                  border: p.status === 'error' ? '1px solid #f44336' :
-                    p.status === 'offline' ? '1px solid #ff9800' :
-                    p.status === 'connecting' ? '1px solid #1976d2' :
-                    peerConnections.current[p.id] ? '1px solid #4caf50' : '1px solid #ddd'
+                  padding: "4px 0"
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>
-                    {p.id === peerRef.current?.id ? "You" : p.name}
-                    <span style={{ fontSize: '12px', color: '#666', marginLeft: '8px' }}>
-                      ({p.id})
-                    </span>
+                {p.id === peerRef.current?.id ? "You" : p.name}
+                {peerConnections.current[p.id] && (
+                  <span style={{
+                    marginLeft: "8px",
+                    fontSize: "12px",
+                    color: '#4caf50'
+                  }}>
+                    (Connected)
                   </span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {p.status === 'error' && (
-                      <span style={{ fontSize: '12px', color: '#f44336' }}>
-                        ❌ {p.error}
-                      </span>
-                    )}
-                    {p.status === 'offline' && (
-                      <span style={{ fontSize: '12px', color: '#ff9800' }}>
-                        ⚠️ {p.error}
-                      </span>
-                    )}
-                    {p.status === 'connecting' && (
-                      <span style={{ fontSize: '12px', color: '#1976d2' }}>
-                        🔄 Connecting...
-                      </span>
-                    )}
-                    {peerConnections.current[p.id] && (
-                      <span style={{
-                        fontSize: "12px",
-                        color: '#4caf50',
-                        fontWeight: 'bold'
-                      }}>
-                        ✅ Connected
-                      </span>
-                    )}
-                    {!peerConnections.current[p.id] && p.id !== peerRef.current?.id && (
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        <button
-                          onClick={() => callPeer(p.id)}
-                          style={{
-                            fontSize: '12px',
-                            padding: '4px 8px',
-                            background: '#1976d2',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          Connect
-                        </button>
-                        {(p.status === 'error' || p.status === 'offline') && (
-                          <button
-                            onClick={() => {
-                              // Clear error status and retry
-                              setParticipants(prev => prev.map(participant => 
-                                participant.id === p.id 
-                                  ? { ...participant, status: 'connecting', error: null }
-                                  : participant
-                              ));
-                              setTimeout(() => callPeer(p.id), 1000);
-                            }}
-                            style={{
-                              fontSize: '12px',
-                              padding: '4px 8px',
-                              background: '#ff9800',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '4px',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            Retry
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                )}
               </li>
             ))}
           </ul>
