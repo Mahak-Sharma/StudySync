@@ -1,11 +1,20 @@
 // API calls for StudySync
 
 // Base URL for the main backend server
+<<<<<<< HEAD
+const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'https://studysync-enqu.onrender.com';
+=======
 const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'https://studysync-irks.onrender.com';
+>>>>>>> 6ff7490509bd1b4461aa4f960b9e4be56d2e3802
 
 // Base URL for the friends backend server
 const FRIENDS_BASE_URL = import.meta.env.VITE_FRIENDS_BACKEND_URL || 'https://studysync-friends-backend.onrender.com';
 
+<<<<<<< HEAD
+// For summaries and other backend calls, use env variable:
+const SUMMARIZATION_BASE_URL = import.meta.env.VITE_SUMMARIZATION_BACKEND_URL || 'https://studysync-summarization.onrender.com';
+=======
+>>>>>>> 6ff7490509bd1b4461aa4f960b9e4be56d2e3802
 
 export const fetchGroups = async () => {
   // Simulate API call

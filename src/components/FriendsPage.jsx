@@ -8,6 +8,10 @@ import {
     respondToFriendRequest,
     getFriends
 } from '../api/api';
+<<<<<<< HEAD
+import { useVideoCallContext } from '../contexts/VideoCallContext';
+=======
+>>>>>>> 6ff7490509bd1b4461aa4f960b9e4be56d2e3802
 import './FriendsPage.css';
 
 const FriendsPage = () => {
