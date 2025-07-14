@@ -7,18 +7,16 @@ const app = express();
 const server = http.createServer(app);
 
 // Enable CORS for all origins (for demo/cross-device)
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [
+    "http://localhost:5173",
+    "https://studysync-enqu.onrender.com",
+    "https://studysync-frontend.onrender.com",
+    "https://studysync-3435a.web.app",
+    "https://studysync-3435a.firebaseapp.com"
+];
+
 app.use(cors({
-    origin: [
-        "http://localhost:5173",
-        "https://studysync-enqu.onrender.com",
-<<<<<<< HEAD
-        "https://studysync-frontend.onrender.com"
-=======
-        "https://studysync-frontend.onrender.com",
-        "https://studysync-3435a.web.app",
-        "https://studysync-3435a.firebaseapp.com"
->>>>>>> 4ac216657b6331e49fad08bc5c18de19114ff827
-    ],
+    origin: allowedOrigins,
     credentials: true
 }));
 
@@ -29,17 +27,7 @@ const peerServer = PeerServer({
     allow_discovery: true,
     proxied: process.env.NODE_ENV === 'production',
     cors: {
-        origin: [
-            "http://localhost:5173",
-            "https://studysync-enqu.onrender.com",
-<<<<<<< HEAD
-            "https://studysync-frontend.onrender.com"
-=======
-            "https://studysync-frontend.onrender.com",
-            "https://studysync-3435a.web.app",
-            "https://studysync-3435a.firebaseapp.com"
->>>>>>> 4ac216657b6331e49fad08bc5c18de19114ff827
-        ],
+        origin: allowedOrigins,
         credentials: true
     }
 });
@@ -139,7 +127,7 @@ server.listen(PORT, () => {
     console.log(`🚀 PeerJS meeting server running on port ${PORT}`);
     console.log(`📡 PeerJS path: /peerjs`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`CORS enabled for: localhost:5173, studysync-enqu.onrender.com, studysync-frontend.onrender.com`);
+    console.log(`CORS enabled for: ${allowedOrigins.join(', ')}`);
 });
 
 module.exports = { app, server, peerServer }; 
