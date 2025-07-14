@@ -40,7 +40,6 @@ __pycache__/
 .env.test.local
 .env.production.local
 .env
-
 # Firebase and service account keys
 src/api/serviceAccountKey.json
 *.json.key
