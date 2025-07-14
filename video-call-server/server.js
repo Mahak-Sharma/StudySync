@@ -10,9 +10,15 @@ app.use(cors({
   credentials: true
 }));
 
-// Attach PeerJS server to Express
+app.get('/', (req, res) => {
+  res.send('PeerJS Video Call Server is running!');
+});
+
+const server = app.listen(PORT, () => {
+  console.log(`PeerJS server running on port ${PORT}`);
+});
+
 const peerServer = PeerServer({
-  port: PORT,
   path: '/peerjs',
   allow_discovery: true,
   cors: {
@@ -21,10 +27,4 @@ const peerServer = PeerServer({
   }
 });
 
-app.get('/', (req, res) => {
-  res.send('PeerJS Video Call Server is running!');
-});
-
-app.listen(PORT, () => {
-  console.log(`PeerJS server running on port ${PORT}`);
-}); 
+app.use('/peerjs', peerServer); 
