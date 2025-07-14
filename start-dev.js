@@ -127,39 +127,6 @@ function startFriendsBackend() {
     return friendsBackend;
 }
 
-// Function to start the video call server (Node.js/Socket.IO)
-function startVideoCallServer() {
-    console.log('🎥 Starting video call server...');
-    const videoCallPath = join(__dirname, 'backend', 'video-call-server');
-    const videoCallServer = spawn('node', ['server.js'], {
-        cwd: videoCallPath,
-        shell: true,
-        stdio: 'pipe',
-        env: {
-            ...process.env,
-            PORT: '5002'
-        }
-    });
-
-    videoCallServer.stdout.on('data', (data) => {
-        console.log(`🎥 Video Call Server: ${data.toString().trim()}`);
-    });
-
-    videoCallServer.stderr.on('data', (data) => {
-        console.error(`❌ Video Call Server Error: ${data.toString().trim()}`);
-    });
-
-    videoCallServer.on('close', (code) => {
-        console.log(`🔴 Video Call Server process exited with code ${code}`);
-    });
-
-    videoCallServer.on('error', (error) => {
-        console.error(`💥 Video Call Server failed to start: ${error.message}`);
-    });
-
-    return videoCallServer;
-}
-
 // Function to start the summarization backend server (Python/Flask)
 function startSummarizationBackend() {
     console.log('📄 Starting summarization backend server...');

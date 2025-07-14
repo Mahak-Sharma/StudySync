@@ -9,8 +9,7 @@ const server = http.createServer(app);
 // Enable CORS for all origins (for demo/cross-device)
 const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [
     "http://localhost:5173",
-    "https://studysync-enqu.onrender.com",
-    "https://studysync-frontend.onrender.com",
+    "https://studysync-irks.onrender.com",
     "https://studysync-3435a.web.app",
     "https://studysync-3435a.firebaseapp.com"
 ];

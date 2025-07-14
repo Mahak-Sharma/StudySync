@@ -7,7 +7,7 @@ const app = express();
 // Enable CORS
 app.use(cors({
     origin: process.env.NODE_ENV === 'production'
-        ? ['https://studysync-enqu.onrender.com', 'https://studysync-frontend.onrender.com']
+        ? ['https://studysync-irks.onrender.com']
         : ['http://localhost:5173', 'http://localhost:3000'],
     credentials: true
 }));
@@ -20,7 +20,7 @@ const peerServer = PeerServer({
     proxied: process.env.NODE_ENV === 'production',
     cors: {
         origin: process.env.NODE_ENV === 'production'
-            ? ['https://studysync-enqu.onrender.com', 'https://studysync-frontend.onrender.com']
+            ? ['https://studysync-irks.onrender.com']
             : ['http://localhost:5173', 'http://localhost:3000'],
         credentials: true
     }
