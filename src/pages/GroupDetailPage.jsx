@@ -8,8 +8,6 @@ import { db } from '../api/firebaseConfig';
 import { doc, getDoc, updateDoc, arrayRemove, deleteDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { FaHome, FaTachometerAlt, FaComments, FaFileAlt, FaListAlt, FaBars, FaVideo } from 'react-icons/fa';
-import MeetingRoom from '../components/MeetingRoom';
-import GroupVideoCallComponent from '../components/VideoCall/GroupVideoCallComponent';
 
 const GroupDetailPage = () => {
   const { groupId } = useParams();
@@ -336,7 +334,6 @@ const GroupDetailPage = () => {
         {selectedSection === 'meeting' && (
           <div style={{ marginBottom: 32 }}>
             <h3 style={{ color: '#1976d2', fontWeight: 700 }}>Group Meeting</h3>
-            <MeetingRoom groupId={groupId} userName={currentUser?.displayName || currentUser?.email || 'Anonymous'} />
           </div>
         )}
       </div>
