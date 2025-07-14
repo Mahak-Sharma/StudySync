@@ -4,6 +4,7 @@ import { db } from '../../api/firebaseConfig';
 import { useAuth } from '../../contexts/AuthContext';
 import { doc, getDoc, updateDoc, arrayUnion, collection, getDocs } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
+import VideoCallRoom from '../VideoCallRoom';
 
 const GroupDashboard = () => {
   const { user } = useAuth();
@@ -13,6 +14,7 @@ const GroupDashboard = () => {
   const [joinSuccess, setJoinSuccess] = useState('');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [meetingGroupId, setMeetingGroupId] = useState(null);
 
   // Fetch user's groups
   useEffect(() => {
@@ -89,12 +91,17 @@ const GroupDashboard = () => {
             <li
               className="group-dashboard-member group-dashboard-member-clickable"
               key={group.id}
-              style={{ cursor: 'pointer' }}
-              onClick={() => navigate(`/group/${group.id}`)}
+              style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
             >
-              <span style={{ color: '#1976d2', fontWeight: 600 }}>
+              <span style={{ color: '#1976d2', fontWeight: 600 }} onClick={() => navigate(`/group/${group.id}`)}>
                 {group.name}
               </span>
+              <button
+                className="group-dashboard-meeting-btn"
+                onClick={() => setMeetingGroupId(group.id)}
+              >
+                Meeting
+              </button>
             </li>
           ))}
         </ul>
@@ -112,6 +119,20 @@ const GroupDashboard = () => {
       </form>
       {joinError && <div style={{ color: 'red', marginBottom: 8 }}>{joinError}</div>}
       {joinSuccess && <div style={{ color: 'green', marginBottom: 8 }}>{joinSuccess}</div>}
+      {meetingGroupId && (
+        <div className="group-meeting-modal-overlay">
+          <div className="group-meeting-modal-content">
+            <button
+              className="group-meeting-modal-close"
+              onClick={() => setMeetingGroupId(null)}
+              aria-label="Close Meeting"
+            >
+              ×
+            </button>
+            <VideoCallRoom forceRoomId={meetingGroupId} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

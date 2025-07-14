@@ -79,4 +79,73 @@
   background: #b71c1c;
   transform: scale(1.04);
 } 
+
+/* Enhanced Meeting Modal Styles */
+.group-meeting-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(25, 118, 210, 0.18);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: overlay-fade-in 0.3s ease-out;
+}
+
+@keyframes overlay-fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.group-meeting-modal-content {
+  background: linear-gradient(135deg, #fff 0%, #e3f0ff 100%);
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(25, 118, 210, 0.18), 0 4px 16px rgba(66, 165, 245, 0.10);
+  padding: 32px 28px 24px 28px;
+  min-width: 350px;
+  min-height: 320px;
+  position: relative;
+  animation: modal-slide-in 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes modal-slide-in {
+  0% { opacity: 0; transform: translateY(-30px) scale(0.95); }
+  70% { opacity: 1; transform: translateY(8px) scale(1.02); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.group-meeting-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: transparent;
+  border: none;
+  font-size: 26px;
+  cursor: pointer;
+  color: #1976d2;
+  transition: color 0.2s;
+  z-index: 10;
+}
+.group-meeting-modal-close:hover {
+  color: #e53935;
+}
+
+.group-dashboard-meeting-btn {
+  margin-left: 16px;
+  padding: 7px 20px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%);
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  font-size: 1.05rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.10);
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+.group-dashboard-meeting-btn:hover {
+  background: linear-gradient(90deg, #1565c0 0%, #1976d2 100%);
+  transform: scale(1.05);
+  box-shadow: 0 6px 24px rgba(25, 118, 210, 0.18);
+} 
  
