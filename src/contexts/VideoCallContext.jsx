@@ -38,10 +38,7 @@ export const VideoCallProvider = ({ children }) => {
     if (!user) return;
     if (socketRef.current) return;
 
-    socketRef.current = io(import.meta.env.PROD 
-      ? 'https://studysync-enqu.onrender.com' 
-      : 'http://localhost:5002'
-    );
+    socketRef.current = io(import.meta.env.VITE_MEETING_SERVER_URL || 'https://studysync-irks.onrender.com');
     socketRef.current.on('connect', () => {
       socketRef.current.emit('user-ready', {
         username: user.uid,

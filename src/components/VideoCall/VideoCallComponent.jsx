@@ -67,17 +67,10 @@ const VideoCallComponent = ({ isOpen, onClose, friendId, friendName }) => {
         const peerId = `user-${user.uid}-${Date.now()}`;
         
         peerRef.current = new Peer(peerId, {
-<<<<<<< HEAD
-            host: import.meta.env.VITE_PEER_SERVER_HOST || 'localhost',
-            port: import.meta.env.VITE_PEER_SERVER_PORT || 9000,
+            host: import.meta.env.VITE_PEER_SERVER_HOST || 'studysync-irks.onrender.com',
+            port: Number(import.meta.env.VITE_PEER_SERVER_PORT) || 443,
             path: '/peerjs',
-            secure: import.meta.env.PROD,
-=======
-            host: import.meta.env.VITE_PEER_SERVER_HOST || 'studysync-enqu.onrender.com',
-            port: import.meta.env.VITE_PEER_SERVER_PORT || 443,
-            path: '/peerjs',
-            secure: true,
->>>>>>> 4ac216657b6331e49fad08bc5c18de19114ff827
+            secure: import.meta.env.VITE_PEER_SERVER_SECURE === 'true' || true,
             config: {
                 iceServers: [
                     { urls: "stun:stun.l.google.com:19302" },
