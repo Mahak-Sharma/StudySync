@@ -6,6 +6,9 @@ const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'https://studysync-enqu.onr
 // Base URL for the friends backend server
 const FRIENDS_BASE_URL = import.meta.env.VITE_FRIENDS_BACKEND_URL || 'https://studysync-friends-backend.onrender.com';
 
+// For summaries and other backend calls, use env variable:
+const SUMMARIZATION_BASE_URL = import.meta.env.VITE_SUMMARIZATION_BACKEND_URL || 'https://studysync-summarization.onrender.com';
+
 export const fetchGroups = async () => {
   // Simulate API call
   return [
@@ -25,25 +28,25 @@ export const saveSummary = async (summary, userId, groupId, filename) => {
 };
 
 export const fetchGroupSummaries = async (groupId) => {
-  const res = await fetch(`${BASE_URL}/summaries?groupId=${groupId}`);
+  const res = await fetch(`${SUMMARIZATION_BASE_URL}/summaries?groupId=${groupId}`);
   const data = await res.json();
   return data.summaries;
 };
 
 export const fetchUserSummaries = async (userId) => {
-  const res = await fetch(`${BASE_URL}/summaries?userId=${userId}&personalOnly=true`);
+  const res = await fetch(`${SUMMARIZATION_BASE_URL}/summaries?userId=${userId}&personalOnly=true`);
   const data = await res.json();
   return data.summaries;
 };
 
 export const fetchPersonalSummaries = async (userId) => {
-  const res = await fetch(`${BASE_URL}/summaries?userId=${userId}&personalOnly=true`);
+  const res = await fetch(`${SUMMARIZATION_BASE_URL}/summaries?userId=${userId}&personalOnly=true`);
   const data = await res.json();
   return data.summaries;
 };
 
 export const deleteSummary = async (summaryId) => {
-  const res = await fetch(`${BASE_URL}/summaries/${summaryId}`, {
+  const res = await fetch(`${SUMMARIZATION_BASE_URL}/summaries/${summaryId}`, {
     method: 'DELETE'
   });
   return res.json();
