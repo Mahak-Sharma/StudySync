@@ -12,6 +12,7 @@ import "./App.css";
 import Chatbot from "./components/Chatbot/Chatbot";
 import { useAuth } from "./contexts/AuthContext";
 import Navbar from './components/Navbar';
+import VideoCallRoom from './components/VideoCallRoom';
 
 const features = [
   {
@@ -59,7 +60,8 @@ function App() {
   }, [user, loading, navigate]);
 
   return (
-    <div className="app-root">
+    <>
+      <VideoCallRoom />
       <Navbar />
       {/* Hero Section */}
       <header className="app-hero">
@@ -100,7 +102,7 @@ function App() {
         </div>
       </section>
 
-    </div>
+    </>
   );
 }
 
