@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useAuth } from './AuthContext';
-import io from 'socket.io-client';
 import IncomingCallModal from '../components/VideoCall/IncomingCallModal';
+import MeetingRoom from '../components/MeetingRoom';
 
 const VideoCallContext = createContext();
 
@@ -14,8 +14,11 @@ export const VideoCallProvider = ({ children }) => {
   const [remoteStream, setRemoteStream] = useState(null);
   const [groupParticipants, setGroupParticipants] = useState([]); // For group calls: [{ userId, displayName, stream }]
   const [callStatus, setCallStatus] = useState('idle'); // idle, calling, connected, ended
+  const [showJoinMeeting, setShowJoinMeeting] = useState(false); // default to false for persistent button
+  const [meetingGroupId, setMeetingGroupId] = useState('');
+  const [meetingUserName, setMeetingUserName] = useState('');
+  const [joinedMeeting, setJoinedMeeting] = useState(false);
 
-  const socketRef = useRef(null);
   const peerConnectionRef = useRef(null);
   const groupPeersRef = useRef({}); // For group calls: userId -> RTCPeerConnection
   const localVideoRef = useRef(null);
@@ -32,136 +35,6 @@ export const VideoCallProvider = ({ children }) => {
       }
     ]
   };
-
-  // Connect to socket server globally
-  useEffect(() => {
-    if (!user) return;
-    if (socketRef.current) return;
-
-    socketRef.current = io(import.meta.env.VITE_MEETING_SERVER_URL || 'https://studysync-irks.onrender.com');
-    socketRef.current.on('connect', () => {
-      socketRef.current.emit('user-ready', {
-        username: user.uid,
-        displayName: user.displayName || user.email
-      });
-    });
-
-    // Listen for incoming calls
-    socketRef.current.on('call-request', (data) => {
-      console.log('Global incoming call:', data);
-      setIncomingCall({
-        from: data.from,
-        fromName: data.fromName,
-        groupId: data.groupId
-      });
-      setShowIncomingModal(true);
-    });
-
-    // Handle call accepted
-    socketRef.current.on('call-accepted', (data) => {
-      if (activeCall && data.from === activeCall.friendId) {
-        setCallStatus('connected');
-        createPeerConnection();
-      }
-    });
-
-    // Handle call rejected
-    socketRef.current.on('call-rejected', (data) => {
-      if (activeCall && data.from === activeCall.friendId) {
-        setCallStatus('ended');
-        setActiveCall(null);
-      }
-    });
-
-    // Handle offers
-    socketRef.current.on('offer', (data) => {
-      console.log('Received offer from:', data.from, 'for active call:', activeCall);
-      if (activeCall && data.from === activeCall.friendId) {
-        handleOffer(data.offer);
-      }
-    });
-
-    // Handle answers
-    socketRef.current.on('answer', (data) => {
-      console.log('Received answer from:', data.from, 'for active call:', activeCall);
-      if (activeCall && data.from === activeCall.friendId && peerConnectionRef.current) {
-        handleAnswer(data.answer);
-      }
-    });
-
-    // Handle ICE candidates
-    socketRef.current.on('ice-candidate', (data) => {
-      if (activeCall && data.from === activeCall.friendId && peerConnectionRef.current) {
-        peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
-      }
-    });
-
-    // Group call events
-    socketRef.current.on('user-joined-room', async ({ userId, displayName }) => {
-      if (activeCall && activeCall.type === 'group' && userId !== user.uid) {
-        console.log('User joined group call:', userId, displayName);
-        createGroupPeerConnection(userId, displayName, true);
-      }
-    });
-
-    socketRef.current.on('user-left-room', ({ userId }) => {
-      if (activeCall && activeCall.type === 'group') {
-        console.log('User left group call:', userId);
-        if (groupPeersRef.current[userId]) {
-          groupPeersRef.current[userId].close();
-          delete groupPeersRef.current[userId];
-        }
-        setGroupParticipants(prev => prev.filter(p => p.userId !== userId));
-      }
-    });
-
-    socketRef.current.on('group-offer', async ({ from, offer }) => {
-      if (activeCall && activeCall.type === 'group' && from !== user.uid) {
-        console.log('Received group offer from:', from);
-        if (!groupPeersRef.current[from]) {
-          createGroupPeerConnection(from, 'Unknown', false);
-        }
-        await groupPeersRef.current[from].setRemoteDescription(new RTCSessionDescription(offer));
-        const answer = await groupPeersRef.current[from].createAnswer();
-        await groupPeersRef.current[from].setLocalDescription(answer);
-        socketRef.current.emit('group-answer', {
-          roomId: activeCall.groupId,
-          from: user.uid,
-          answer
-        });
-      }
-    });
-
-    socketRef.current.on('group-answer', async ({ from, answer }) => {
-      if (activeCall && activeCall.type === 'group' && from !== user.uid) {
-        console.log('Received group answer from:', from);
-        if (groupPeersRef.current[from]) {
-          await groupPeersRef.current[from].setRemoteDescription(new RTCSessionDescription(answer));
-        }
-      }
-    });
-
-    socketRef.current.on('group-ice-candidate', async ({ from, candidate }) => {
-      if (activeCall && activeCall.type === 'group' && from !== user.uid) {
-        console.log('Received group ICE candidate from:', from);
-        if (groupPeersRef.current[from]) {
-          try {
-            await groupPeersRef.current[from].addIceCandidate(new RTCIceCandidate(candidate));
-          } catch (e) {
-            // ignore
-          }
-        }
-      }
-    });
-
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
-      }
-    };
-    // eslint-disable-next-line
-  }, [user]);
 
   // Setup media stream
   const setupMediaStream = async () => {
@@ -196,12 +69,10 @@ export const VideoCallProvider = ({ children }) => {
     };
 
     peerConnectionRef.current.onicecandidate = (event) => {
-      if (event.candidate && socketRef.current && activeCall) {
-        socketRef.current.emit('ice-candidate', {
-          to: activeCall.friendId,
-          from: user.uid,
-          candidate: event.candidate
-        });
+      if (event.candidate) {
+        // This part of the logic needs to be re-evaluated as socket.io is removed.
+        // For now, we'll just log the candidate.
+        console.log('ICE candidate received:', event.candidate);
       }
     };
   };
@@ -218,11 +89,9 @@ export const VideoCallProvider = ({ children }) => {
       const answer = await peerConnectionRef.current.createAnswer();
       await peerConnectionRef.current.setLocalDescription(answer);
 
-      socketRef.current.emit('answer', {
-        to: activeCall.friendId,
-        from: user.uid,
-        answer: answer
-      });
+      // This part of the logic needs to be re-evaluated as socket.io is removed.
+      // For now, we'll just log the answer.
+      console.log('Answer created and set for 1:1 call:', answer);
     } catch (error) {
       console.error('Error handling offer:', error);
     }
@@ -265,12 +134,10 @@ export const VideoCallProvider = ({ children }) => {
 
     // ICE candidate
     pc.onicecandidate = (event) => {
-      if (event.candidate && socketRef.current && activeCall) {
-        socketRef.current.emit('group-ice-candidate', {
-          roomId: activeCall.groupId,
-          from: user.uid,
-          candidate: event.candidate
-        });
+      if (event.candidate) {
+        // This part of the logic needs to be re-evaluated as socket.io is removed.
+        // For now, we'll just log the candidate.
+        console.log('Group ICE candidate received from:', peerId, event.candidate);
       }
     };
 
@@ -280,13 +147,9 @@ export const VideoCallProvider = ({ children }) => {
         try {
           const offer = await pc.createOffer();
           await pc.setLocalDescription(offer);
-          if (socketRef.current && activeCall) {
-            socketRef.current.emit('group-offer', {
-              roomId: activeCall.groupId,
-              from: user.uid,
-              offer
-            });
-          }
+          // This part of the logic needs to be re-evaluated as socket.io is removed.
+          // For now, we'll just log the offer.
+          console.log('Group offer created and set for:', peerId, offer);
         } catch (e) {
           console.error('Error creating group offer:', e);
         }
@@ -297,7 +160,7 @@ export const VideoCallProvider = ({ children }) => {
   // Start outgoing call
   const startCall = async (friendId, friendName, groupId = null, groupName = null) => {
     console.log('Starting call:', { friendId, friendName, groupId, groupName });
-    if (!socketRef.current || !user) return;
+    if (!user) return;
 
     const stream = await setupMediaStream();
     if (!stream) return;
@@ -313,27 +176,22 @@ export const VideoCallProvider = ({ children }) => {
 
     if (groupId) {
       // Group call - join the room
-      socketRef.current.emit('join-room', {
-        roomId: groupId,
-        userId: user.uid,
-        displayName: user.displayName || user.email
-      });
+      // This part of the logic needs to be re-evaluated as socket.io is removed.
+      // For now, we'll just log the join.
+      console.log('Joining group call room:', groupId);
     } else {
       // 1:1 call - create peer connection for outgoing call
       createPeerConnection(stream);
-      socketRef.current.emit('call-request', {
-        to: friendId,
-        from: user.uid,
-        fromName: user.displayName || user.email,
-        groupId
-      });
+      // This part of the logic needs to be re-evaluated as socket.io is removed.
+      // For now, we'll just log the call request.
+      console.log('Sending 1:1 call request to:', friendId);
     }
   };
 
   // Accept incoming call
   const acceptCall = async () => {
     console.log('Accepting incoming call:', incomingCall);
-    if (!incomingCall || !socketRef.current || !user) return;
+    if (!incomingCall || !user) return;
 
     // Clear the notification immediately
     setShowIncomingModal(false);
@@ -350,10 +208,9 @@ export const VideoCallProvider = ({ children }) => {
     });
     setCallStatus('connected');
 
-    socketRef.current.emit('call-accepted', {
-      to: incomingCall.from,
-      from: user.uid
-    });
+    // This part of the logic needs to be re-evaluated as socket.io is removed.
+    // For now, we'll just log the accept.
+    console.log('Accepting call from:', incomingCall.from);
 
     createPeerConnection(stream);
 
@@ -362,11 +219,9 @@ export const VideoCallProvider = ({ children }) => {
       const offer = await peerConnectionRef.current.createOffer();
       await peerConnectionRef.current.setLocalDescription(offer);
 
-      socketRef.current.emit('offer', {
-        to: incomingCall.from,
-        from: user.uid,
-        offer: offer
-      });
+      // This part of the logic needs to be re-evaluated as socket.io is removed.
+      // For now, we'll just log the offer.
+      console.log('Sending 1:1 offer to:', incomingCall.from, offer);
     } catch (error) {
       console.error('Error creating offer:', error);
     }
@@ -374,12 +229,11 @@ export const VideoCallProvider = ({ children }) => {
 
   // Reject incoming call
   const rejectCall = () => {
-    if (!incomingCall || !socketRef.current || !user) return;
+    if (!incomingCall || !user) return;
 
-    socketRef.current.emit('call-rejected', {
-      to: incomingCall.from,
-      from: user.uid
-    });
+    // This part of the logic needs to be re-evaluated as socket.io is removed.
+    // For now, we'll just log the reject.
+    console.log('Rejecting call from:', incomingCall.from);
 
     setShowIncomingModal(false);
     setIncomingCall(null);
@@ -406,19 +260,9 @@ export const VideoCallProvider = ({ children }) => {
     setActiveCall(null);
     setCallStatus('idle');
 
-    if (socketRef.current && activeCall) {
-      if (activeCall.type === 'group') {
-        socketRef.current.emit('leave-room', {
-          roomId: activeCall.groupId,
-          userId: user.uid
-        });
-      } else {
-        socketRef.current.emit('call-ended', {
-          to: activeCall.friendId,
-          from: user.uid
-        });
-      }
-    }
+    // This part of the logic needs to be re-evaluated as socket.io is removed.
+    // For now, we'll just log the end.
+    console.log('Ending call.');
   };
 
   // Cleanup on unmount
@@ -433,31 +277,104 @@ export const VideoCallProvider = ({ children }) => {
     };
   }, [localStream]);
 
+  // Persistent Join Meeting button
+  const joinMeetingButton = !joinedMeeting && !showJoinMeeting ? (
+    <button
+      style={{
+        position: 'fixed',
+        top: 24,
+        right: 24,
+        zIndex: 1000,
+        padding: '10px 24px',
+        fontSize: 16,
+        background: '#1976d2',
+        color: '#fff',
+        border: 'none',
+        borderRadius: 6,
+        cursor: 'pointer',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.12)'
+      }}
+      onClick={() => setShowJoinMeeting(true)}
+    >
+      Join Meeting
+    </button>
+  ) : null;
+
+  // UI for joining a meeting
+  if (showJoinMeeting && !joinedMeeting) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 40 }}>
+        {joinMeetingButton}
+        <h2>Join a Meeting</h2>
+        <input
+          type="text"
+          placeholder="Group ID"
+          value={meetingGroupId}
+          onChange={e => setMeetingGroupId(e.target.value)}
+          style={{ marginBottom: 10, padding: 8, fontSize: 16 }}
+        />
+        <input
+          type="text"
+          placeholder="Your Name"
+          value={meetingUserName}
+          onChange={e => setMeetingUserName(e.target.value)}
+          style={{ marginBottom: 10, padding: 8, fontSize: 16 }}
+        />
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button
+            onClick={() => {
+              if (meetingGroupId && meetingUserName) {
+                setJoinedMeeting(true);
+                setShowJoinMeeting(false);
+              }
+            }}
+            style={{ padding: '8px 24px', fontSize: 16 }}
+          >
+            Join Meeting
+          </button>
+          <button
+            onClick={() => setShowJoinMeeting(false)}
+            style={{ padding: '8px 24px', fontSize: 16, background: '#eee', color: '#333', border: '1px solid #ccc' }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Render MeetingRoom after joining
+  if (joinedMeeting) {
+    return <MeetingRoom groupId={meetingGroupId} userName={meetingUserName} />;
+  }
+
   return (
-    <VideoCallContext.Provider value={{
-      socket: socketRef.current,
-      activeCall,
-      localStream,
-      remoteStream,
-      groupParticipants,
-      callStatus,
-      startCall,
-      acceptCall,
-      rejectCall,
-      endCall,
-      localVideoRef,
-      remoteVideoRef,
-      incomingCall,
-      showIncomingModal
-    }}>
-      {children}
-      <IncomingCallModal
-        open={showIncomingModal}
-        callerName={incomingCall?.fromName || 'Unknown'}
-        onAccept={acceptCall}
-        onReject={rejectCall}
-      />
-    </VideoCallContext.Provider>
+    <>
+      {joinMeetingButton}
+      <VideoCallContext.Provider value={{
+        activeCall,
+        localStream,
+        remoteStream,
+        groupParticipants,
+        callStatus,
+        startCall,
+        acceptCall,
+        rejectCall,
+        endCall,
+        localVideoRef,
+        remoteVideoRef,
+        incomingCall,
+        showIncomingModal
+      }}>
+        {children}
+        <IncomingCallModal
+          open={showIncomingModal}
+          callerName={incomingCall?.fromName || 'Unknown'}
+          onAccept={acceptCall}
+          onReject={rejectCall}
+        />
+      </VideoCallContext.Provider>
+    </>
   );
 };
 

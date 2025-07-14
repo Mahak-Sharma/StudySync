@@ -1,6 +1,5 @@
 var app = require('./config/routes');
 var server = require('http').createServer(app);
-var io = require('./config/io')(server);
 var config = require('./config/config');
 
 server.on('error', function(err){
