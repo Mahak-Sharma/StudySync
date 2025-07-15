@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Peer from 'peerjs';
 
 const getPeerConfig = () => ({
-  host: import.meta.env.VITE_PEER_SERVER_HOST || 'studysync-fgg4.onrender.com',
+  host: import.meta.env.VITE_PEER_SERVER_HOST || 'video-call-backend-production-bf51.up.railway.app',
   port: Number(import.meta.env.VITE_PEER_SERVER_PORT) || 443,
   path: '/peerjs',
   secure: import.meta.env.VITE_PEER_SERVER_SECURE === 'true' || true,
