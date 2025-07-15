@@ -127,35 +127,33 @@ function startFriendsBackend() {
     return friendsBackend;
 }
 
-// Function to start the summarization backend server (Python/Flask)
-function startSummarizationBackend() {
-    console.log('📄 Starting summarization backend server...');
-    const backendPath = join(__dirname, 'backend');
-    const summarizationBackend = spawn('python', ['summarize_api.py'], {
-        cwd: backendPath,
+// Function to start the Python summarization backend
+function startPythonSummarizationBackend() {
+    console.log('📄 Starting Python summarization backend...');
+    const summarizationBackend = spawn('python', ['backend/summarize_api.py'], {
         shell: true,
         stdio: 'pipe',
         env: {
             ...process.env,
-            FLASK_APP: 'summarize_api.py',
-            FLASK_ENV: 'development'
+            FLASK_ENV: 'development',
+            PYTHONUNBUFFERED: '1',
         }
     });
 
     summarizationBackend.stdout.on('data', (data) => {
-        console.log(`📄 Summarization Backend: ${data.toString().trim()}`);
+        console.log(`📄 Python Summarization Backend: ${data.toString().trim()}`);
     });
 
     summarizationBackend.stderr.on('data', (data) => {
-        console.error(`❌ Summarization Backend Error: ${data.toString().trim()}`);
+        console.error(`❌ Python Summarization Backend Error: ${data.toString().trim()}`);
     });
 
     summarizationBackend.on('close', (code) => {
-        console.log(`🔴 Summarization Backend process exited with code ${code}`);
+        console.log(`🔴 Python Summarization Backend process exited with code ${code}`);
     });
 
     summarizationBackend.on('error', (error) => {
-        console.error(`💥 Summarization Backend failed to start: ${error.message}`);
+        console.error(`💥 Python Summarization Backend failed to start: ${error.message}`);
     });
 
     return summarizationBackend;
@@ -286,18 +284,12 @@ async function startAllServices() {
         // Start friends backend first (port 5000)
         const friendsBackendProcess = startFriendsBackend();
         processes.push(friendsBackendProcess);
-        
-        // Wait a bit, then start video call server (port 5002)
+
+        // Start Python summarization backend (port 5001)
         setTimeout(() => {
-            const videoCallServerProcess = startVideoCallServer();
-            processes.push(videoCallServerProcess);
+            const pythonSummarizationBackendProcess = startPythonSummarizationBackend();
+            processes.push(pythonSummarizationBackendProcess);
         }, 2000);
-        
-        // Wait a bit more, then start summarization backend (port 5001)
-        setTimeout(() => {
-            const summarizationBackendProcess = startSummarizationBackend();
-            processes.push(summarizationBackendProcess);
-        }, 4000);
         
         // Wait a bit more, then start meeting server (port 5003)
         setTimeout(() => {

@@ -8,7 +8,7 @@ from summary_store import add_summary, get_summaries, delete_summary
 ALLOWED_EXTENSIONS = {'pdf', 'docx', 'txt', 'png', 'jpg', 'jpeg', 'bmp', 'tiff'}
 
 app = Flask(__name__)
-CORS(app, origins=["https://studysync-3435a.web.app"])
+CORS(app, origins=["http://localhost:5173", "https://studysync-3435a.web.app"])
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS

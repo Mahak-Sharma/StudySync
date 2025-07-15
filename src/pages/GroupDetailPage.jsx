@@ -27,7 +27,7 @@ const GroupDetailPage = () => {
   const [deletingGroup, setDeletingGroup] = useState(false);
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
-  const [selectedSection, setSelectedSection] = useState('');
+  const [selectedSection, setSelectedSection] = useState('chat');
   const [fade, setFade] = useState(false);
   const [groupCallOpen, setGroupCallOpen] = useState(false);
 
@@ -282,24 +282,10 @@ const GroupDetailPage = () => {
         )}
         {selectedSection === 'chat' && (
           <>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
-              <button
-                className="group-call-btn"
-                onClick={() => setGroupCallOpen(true)}
-              >
-                📹 Start Group Call
-              </button>
-            </div>
             <div style={{ marginBottom: 32 }}>
               <h3 style={{ color: '#1976d2', fontWeight: 700 }}>Group Chat</h3>
               <ChatBox groupId={groupId} />
             </div>
-            <GroupVideoCallComponent
-              isOpen={groupCallOpen}
-              onClose={() => setGroupCallOpen(false)}
-              groupId={groupId}
-              groupName={groupName}
-            />
           </>
         )}
         {selectedSection === 'files' && (
