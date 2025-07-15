@@ -19,13 +19,20 @@ const serviceAccount = {
 };
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
 });
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'https://studysync-3435a.web.app',
+    'https://studysync-3435a.firebaseapp.com'
+  ],
+  credentials: true
+}));
 app.use(express.json());
 
 // Add Firestore reference
@@ -194,5 +201,5 @@ app.get('/group-members', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Friends backend running on http://localhost:${PORT}`);
+    console.log(`Friends backend running on port ${PORT}`);
 }); 

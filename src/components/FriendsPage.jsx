@@ -19,7 +19,6 @@ const FriendsPage = () => {
     const [friends, setFriends] = useState([]);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
-    const { startCall } = useVideoCallContext();
 
     // Get current user from Firebase Auth
     useEffect(() => {
