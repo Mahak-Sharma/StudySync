@@ -59,7 +59,7 @@ function App() {
   }, [user, loading, navigate]);
 
   return (
-    <div className="app-root">
+    <>
       <Navbar />
       {/* Hero Section */}
       <header className="app-hero">
@@ -100,7 +100,7 @@ function App() {
         </div>
       </section>
 
-    </div>
+    </>
   );
 }
 

@@ -3,7 +3,8 @@ import { FaDownload, FaFileUpload, FaSpinner, FaCheck, FaTimes } from 'react-ico
 import React, { useRef, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 
-const API_URL = 'http://localhost:5001'; // Summarization backend runs on port 5001
+// Use the same summarization base URL as in api.js
+const API_URL = import.meta.env.VITE_SUMMARIZATION_BASE_URL || "http://localhost:5000";
 
 const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'txt', 'png', 'jpg', 'jpeg', 'bmp', 'tiff'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB

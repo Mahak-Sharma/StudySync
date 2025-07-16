@@ -8,7 +8,7 @@ from summary_store import add_summary, get_summaries, delete_summary
 ALLOWED_EXTENSIONS = {'pdf', 'docx', 'txt', 'png', 'jpg', 'jpeg', 'bmp', 'tiff'}
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["http://localhost:5173", "https://studysync-3435a.web.app"])
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -83,4 +83,5 @@ def delete_summary_endpoint(summary_id):
         return jsonify({'error': f'Error deleting summary: {str(e)}'}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001) 
+    port = int(os.environ.get("PORT", 5001))
+    app.run(debug=False, host="0.0.0.0", port=port)

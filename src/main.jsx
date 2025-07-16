@@ -15,8 +15,6 @@ import Chatbot from './components/Chatbot/Chatbot';
 import GroupDetailPage from './pages/GroupDetailPage';
 import YourSummaries from './pages/YourSummaries';
 import FriendsPage from './components/FriendsPage';
-import { VideoCallProvider } from './contexts/VideoCallContext';
-import GlobalVideoCall from './components/VideoCall/GlobalVideoCall';
 import { AnimatePresence, motion } from 'framer-motion';
 
 function AnimatedRoutes() {
@@ -154,15 +152,12 @@ function AnimatedRoutes() {
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AuthProvider>
-      <VideoCallProvider>
         <BrowserRouter>
           <AnimatedRoutes />
           <div style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 1000 }}>
             <Chatbot />
           </div>
-          <GlobalVideoCall />
         </BrowserRouter>
-      </VideoCallProvider>
     </AuthProvider>
   </React.StrictMode>
 );

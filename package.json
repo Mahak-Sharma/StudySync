@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "dev:all": "node start-dev.js",
-    "start": "node start-dev.js"
+    "start": "node start-dev.js",
+    "deploy": "npm run build && firebase deploy",
+    "deploy:hosting": "firebase deploy --only hosting"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -18,18 +20,17 @@
     "@mui/icons-material": "^7.2.0",
     "@mui/material": "^7.2.0",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.0",
     "express": "^5.1.0",
     "firebase": "^11.10.0",
     "firebase-admin": "^13.4.0",
     "framer-motion": "^12.23.0",
-    "peer": "^1.1.0-rc.2",
-    "peerjs": "^1.5.5",
+    "peer": "^1.0.2",
+    "peerjs": "^1.4.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.5.0",
-    "react-router-dom": "^7.6.3",
-    "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1"
+    "react-router-dom": "^7.6.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",

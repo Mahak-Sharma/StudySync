@@ -8,7 +8,6 @@ import {
     respondToFriendRequest,
     getFriends
 } from '../api/api';
-import { useVideoCallContext } from '../contexts/VideoCallContext';
 import './FriendsPage.css';
 
 const FriendsPage = () => {
@@ -20,7 +19,6 @@ const FriendsPage = () => {
     const [friends, setFriends] = useState([]);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
-    const { startCall } = useVideoCallContext();
 
     // Get current user from Firebase Auth
     useEffect(() => {
