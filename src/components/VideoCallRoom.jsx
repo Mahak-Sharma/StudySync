@@ -1,6 +1,6 @@
 import React from "react";
 import { HMSPrebuilt } from "@100mslive/roomkit-react";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
 
 const VideoCallRoom = ({ forceRoomId }) => {
   const { user } = useAuth();
