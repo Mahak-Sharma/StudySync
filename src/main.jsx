@@ -15,6 +15,7 @@ import Chatbot from './components/Chatbot/Chatbot';
 import GroupDetailPage from './pages/GroupDetailPage';
 import YourSummaries from './pages/YourSummaries';
 import FriendsPage from './components/FriendsPage';
+import MeetingPage from './pages/MeetingPage';
 import { AnimatePresence, motion } from 'framer-motion';
 
 function AnimatedRoutes() {
@@ -122,6 +123,16 @@ function AnimatedRoutes() {
             <FriendsPage />
           </motion.div>
         } />
+        <Route path="/meeting" element={
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <MeetingPage />
+          </motion.div>
+        } />
         <Route path="/signup" element={
           <motion.div
             initial={{ opacity: 0, x: 80, scale: 0.98 }}
@@ -152,12 +163,12 @@ function AnimatedRoutes() {
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AuthProvider>
-        <BrowserRouter>
-          <AnimatedRoutes />
-          <div style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 1000 }}>
-            <Chatbot />
-          </div>
-        </BrowserRouter>
+      <BrowserRouter>
+        <AnimatedRoutes />
+        <div style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 1000 }}>
+          <Chatbot />
+        </div>
+      </BrowserRouter>
     </AuthProvider>
   </React.StrictMode>
 );
