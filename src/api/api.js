@@ -173,26 +173,16 @@ export const sendGroupInvite = async (friendId, groupId) => {
 
 // 100ms Room Creation
 export const create100msRoom = async (groupName) => {
-  const HMS_API_ENDPOINT = 'https://api.100ms.live/v2/rooms';
-  const HMS_MANAGEMENT_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3NTI3NTg0OTAsImV4cCI6MTc1MzM2MzI5MCwianRpIjoiMTQ4ZjNiOWUtYmRiYi00MGU4LTkyZmMtMmFkOGUzNDM5ZDRmIiwidHlwZSI6Im1hbmFnZW1lbnQiLCJ2ZXJzaW9uIjoyLCJuYmYiOjE3NTI3NTg0OTAsImFjY2Vzc19rZXkiOiI2ODc3OGRiNWJkMGRhYjVmOWEwMTMwN2QifQ.gLXkSCaCmKnbnnOt0kKmaCHd99aIDxoB0xgjIYGxIyA';
-  const TEMPLATE_ID = '68778e51033903926e6172e2'; // 100ms template id from user
-
   try {
-    const res = await fetch(HMS_API_ENDPOINT, {
+    const res = await fetch('http://localhost:9000/create-100ms-room-code', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${HMS_MANAGEMENT_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        name: groupName + '-' + Date.now(),
-        description: `Room for group: ${groupName}`,
-        template_id: TEMPLATE_ID
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ groupName })
     });
-    if (!res.ok) throw new Error('Failed to create 100ms room');
     const data = await res.json();
-    return data.code; // This is the room code
+    console.log('Backend room code response:', data);
+    if (!res.ok) throw new Error(data.error || 'Failed to create 100ms room code');
+    return data.code;
   } catch (err) {
     console.error('Error creating 100ms room:', err);
     throw err;

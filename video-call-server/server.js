@@ -46,6 +46,58 @@ app.post('/100ms-token', express.json(), async (req, res) => {
   }
 });
 
+// Endpoint to create 100ms room and room code
+app.post('/create-100ms-room-code', express.json(), async (req, res) => {
+  const { groupName } = req.body;
+  if (!groupName) {
+    return res.status(400).json({ error: 'groupName is required' });
+  }
+
+  const HMS_API_ENDPOINT = 'https://api.100ms.live/v2/rooms';
+  const HMS_MANAGEMENT_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3NTI3NTg0OTAsImV4cCI6MTc1MzM2MzI5MCwianRpIjoiMTQ4ZjNiOWUtYmRiYi00MGU4LTkyZmMtMmFkOGUzNDM5ZDRmIiwidHlwZSI6Im1hbmFnZW1lbnQiLCJ2ZXJzaW9uIjoyLCJuYmYiOjE3NTI3NTg0OTAsImFjY2Vzc19rZXkiOiI2ODc3OGRiNWJkMGRhYjVmOWEwMTMwN2QifQ.gLXkSCaCmKnbnnOt0kKmaCHd99aIDxoB0xgjIYGxIyA';
+  const TEMPLATE_ID = '68778e51033903926e6172e2';
+
+  try {
+    // Step 1: Create the room
+    const resRoom = await fetch(HMS_API_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${HMS_MANAGEMENT_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: groupName + '-' + Date.now(),
+        description: `Room for group: ${groupName}`,
+        template_id: TEMPLATE_ID
+      })
+    });
+    const dataRoom = await resRoom.json();
+    console.log('100ms room creation response (backend):', dataRoom);
+    if (!resRoom.ok) return res.status(500).json({ error: 'Failed to create 100ms room', details: dataRoom });
+    const roomId = dataRoom.id;
+    if (!roomId) return res.status(500).json({ error: 'Room ID not found in 100ms response', details: dataRoom });
+
+    // Step 2: Create the room code
+    const resCode = await fetch('https://api.100ms.live/v2/room-codes', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${HMS_MANAGEMENT_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        room_id: roomId
+      })
+    });
+    const dataCode = await resCode.json();
+    console.log('100ms room code creation response (backend):', dataCode);
+    if (!resCode.ok) return res.status(500).json({ error: 'Failed to create 100ms room code', details: dataCode });
+    return res.json({ code: dataCode.code });
+  } catch (err) {
+    console.error('Error creating 100ms room and code:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 // Start Express HTTP server
 const server = app.listen(PORT, () => {
   console.log(`🌐 Express server listening on port ${PORT}`);
