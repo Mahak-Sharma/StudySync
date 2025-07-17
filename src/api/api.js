@@ -173,18 +173,61 @@ export const sendGroupInvite = async (friendId, groupId) => {
 
 // 100ms Room Creation
 export const create100msRoom = async (groupName) => {
-  try {
-    const res = await fetch('http://localhost:9000/create-100ms-room-code', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ groupName })
-    });
-    const data = await res.json();
-    console.log('Backend room code response:', data);
-    if (!res.ok) throw new Error(data.error || 'Failed to create 100ms room code');
-    return data.code;
-  } catch (err) {
-    console.error('Error creating 100ms room:', err);
-    throw err;
+  const BACKEND_URL = 'http://localhost:9000'; // Your backend server
+  const res = await fetch(`${BACKEND_URL}/create-100ms-room-code`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ groupName })
+  });
+  if (!res.ok) throw new Error('Failed to create 100ms room');
+  const data = await res.json();
+  return data.code;
+};
+
+export const PREMADE_ROOM_IDS = [
+  '68792d43a48ca61c46476010',
+  '68792d16a48ca61c4647600f',
+  '68792d09a48ca61c4647600e',
+  '68792cf6a48ca61c4647600d',
+  '68792ceaa5ba8326e6eb4897',
+  '68792cdfa5ba8326e6eb4896',
+  '68792cd1a5ba8326e6eb4895',
+  '68792cc0a5ba8326e6eb4894',
+  '68792caba48ca61c4647600c',
+  '68792c7ba48ca61c4647600b',
+  '68792c6ca48ca61c46476009',
+  '68792c55a48ca61c46476008',
+  '68792c2ea48ca61c46476006',
+  '68778e51a5ba8326e6eb4748',
+  '68790076576aae6c96ba5822',
+  '687901cc252d7b52c5ff054a',
+  '687902c8252d7b52c5ff06e4',
+  '68790425576aae6c96ba5dab',
+  '687906a9576aae6c96ba60c6',
+  '68792c19a5ba8326e6eb488d',
+  '68792c30a48ca61c46476007',
+  '68792c56a5ba8326e6eb488e',
+  '68792c66a5ba8326e6eb488f',
+  '68792c73a48ca61c4647600a',
+  '68792c80a5ba8326e6eb4890',
+  '68792c8ca5ba8326e6eb4891',
+  '68792c99a5ba8326e6eb4892',
+  '68792ca5a5ba8326e6eb4893',
+];
+
+import { collection, getDocs } from 'firebase/firestore';
+
+export const getUnusedRoomId = async (db) => {
+  // Get all groups and their roomIds
+  const groupsSnap = await getDocs(collection(db, "groups"));
+  const usedRoomIds = new Set();
+  groupsSnap.forEach(doc => {
+    const data = doc.data();
+    if (data.roomId) usedRoomIds.add(data.roomId);
+  });
+  // Find the first unused roomId
+  for (const id of PREMADE_ROOM_IDS) {
+    if (!usedRoomIds.has(id)) return id;
   }
+  throw new Error('No unused room IDs available');
 }; 
