@@ -1,9 +1,22 @@
 import React, { useState } from "react";
 import './CreateGroupModal.css';
 import { db } from '../../api/firebaseConfig';
-import { collection, addDoc, serverTimestamp, doc, setDoc, arrayUnion } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, setDoc, arrayUnion, getDocs, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
-import { getUnusedRoomCode } from '../../api/api';
+import { getUnusedRoomCode, PREMADE_ROOM_CODES } from '../../api/api';
+
+// Migration: Assign roomCode to existing groups that only have roomId
+export const migrateRoomIdsToCodes = async (db) => {
+  const groupsSnap = await getDocs(collection(db, "groups"));
+  let i = 0;
+  for (const groupDoc of groupsSnap.docs) {
+    const data = groupDoc.data();
+    if (data.roomId && !data.roomCode && PREMADE_ROOM_CODES[i]) {
+      await updateDoc(groupDoc.ref, { roomCode: PREMADE_ROOM_CODES[i] });
+      i++;
+    }
+  }
+};
 
 const CreateGroupModal = ({ open, onClose }) => {
   const [groupName, setGroupName] = useState("");
@@ -11,6 +24,11 @@ const CreateGroupModal = ({ open, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { user } = useAuth();
+
+  // Call migration on mount (one-time)
+  React.useEffect(() => {
+    migrateRoomIdsToCodes(db);
+  }, []);
 
   const handleCreate = async () => {
     setError("");
