@@ -1,16 +1,40 @@
 import React from "react";
 import { HMSPrebuilt } from "@100mslive/roomkit-react";
 import { useAuth } from "../contexts/AuthContext";
+import { db } from "../api/firebaseConfig";
+import { doc, getDoc } from "firebase/firestore";
 
 const VideoCallRoom = ({ forceRoomId }) => {
   const { user } = useAuth();
   const [join, setJoin] = React.useState(false);
   const [userName, setUserName] = React.useState(user?.displayName || "");
+  const [roomCode, setRoomCode] = React.useState("");
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchRoomCode = async () => {
+      if (!forceRoomId) return;
+      const groupRef = doc(db, 'groups', forceRoomId);
+      const groupSnap = await getDoc(groupRef);
+      if (groupSnap.exists()) {
+        const code = groupSnap.data().roomCode;
+        setRoomCode(code ? code.trim() : "");
+        // Debug log
+        console.log('Fetched roomCode from Firestore:', code);
+      } else {
+        setRoomCode("");
+      }
+      setLoading(false);
+    };
+    fetchRoomCode();
+  }, [forceRoomId]);
+
+  if (loading) return <div>Loading meeting...</div>;
 
   if (join) {
     return (
       <div style={{ height: "70vh", minWidth: 320 }}>
-        <HMSPrebuilt roomCode={forceRoomId} userName={userName} />
+        <HMSPrebuilt roomCode={roomCode} userName={userName} />
       </div>
     );
   }
@@ -35,10 +59,10 @@ const VideoCallRoom = ({ forceRoomId }) => {
       />
       <button
         onClick={() => setJoin(true)}
-        disabled={!userName}
+        disabled={!userName || !roomCode}
         style={{
           background: 'linear-gradient(90deg, #1976d2 0%, #42a5f5 100%)', color: '#fff', fontWeight: 700, fontSize: 17,
-          border: 'none', borderRadius: 10, padding: '12px 0', width: '100%', boxShadow: '0 2px 8px #1976d220', cursor: (!userName) ? 'not-allowed' : 'pointer', opacity: (!userName) ? 0.6 : 1,
+          border: 'none', borderRadius: 10, padding: '12px 0', width: '100%', boxShadow: '0 2px 8px #1976d220', cursor: (!userName || !roomCode) ? 'not-allowed' : 'pointer', opacity: (!userName || !roomCode) ? 0.6 : 1,
           transition: 'background 0.2s, transform 0.15s, box-shadow 0.2s'
         }}
       >
