@@ -3,7 +3,7 @@ import './CreateGroupModal.css';
 import { db } from '../../api/firebaseConfig';
 import { collection, addDoc, serverTimestamp, doc, setDoc, arrayUnion } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
-import { getUnusedRoomId } from '../../api/api';
+import { getUnusedRoomCode } from '../../api/api';
 
 const CreateGroupModal = ({ open, onClose }) => {
   const [groupName, setGroupName] = useState("");
@@ -17,16 +17,16 @@ const CreateGroupModal = ({ open, onClose }) => {
     if (groupName.trim() && user) {
       setLoading(true);
       try {
-        // 1. Get an unused 100ms roomId
-        const roomId = await getUnusedRoomId(db);
-        if (!roomId) throw new Error('No unused 100ms room IDs available');
-        // 2. Create group in Firestore with roomId
+        // 1. Get an unused 100ms roomCode
+        const roomCode = await getUnusedRoomCode(db);
+        if (!roomCode) throw new Error('No unused 100ms room codes available');
+        // 2. Create group in Firestore with roomCode
         const docRef = await addDoc(collection(db, "groups"), {
           name: groupName,
           members: [user.uid],
           createdBy: user.uid,
           createdAt: serverTimestamp(),
-          roomId // Save 100ms room id
+          roomCode // Save 100ms room code
         });
         setCreatedGroupId(docRef.id);
         setGroupName("");

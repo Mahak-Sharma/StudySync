@@ -184,50 +184,49 @@ export const create100msRoom = async (groupName) => {
   return data.code;
 };
 
-export const PREMADE_ROOM_IDS = [
-  '68792d43a48ca61c46476010',
-  '68792d16a48ca61c4647600f',
-  '68792d09a48ca61c4647600e',
-  '68792cf6a48ca61c4647600d',
-  '68792ceaa5ba8326e6eb4897',
-  '68792cdfa5ba8326e6eb4896',
-  '68792cd1a5ba8326e6eb4895',
-  '68792cc0a5ba8326e6eb4894',
-  '68792caba48ca61c4647600c',
-  '68792c7ba48ca61c4647600b',
-  '68792c6ca48ca61c46476009',
-  '68792c55a48ca61c46476008',
-  '68792c2ea48ca61c46476006',
-  '68778e51a5ba8326e6eb4748',
-  '68790076576aae6c96ba5822',
-  '687901cc252d7b52c5ff054a',
-  '687902c8252d7b52c5ff06e4',
-  '68790425576aae6c96ba5dab',
-  '687906a9576aae6c96ba60c6',
-  '68792c19a5ba8326e6eb488d',
-  '68792c30a48ca61c46476007',
-  '68792c56a5ba8326e6eb488e',
-  '68792c66a5ba8326e6eb488f',
-  '68792c73a48ca61c4647600a',
-  '68792c80a5ba8326e6eb4890',
-  '68792c8ca5ba8326e6eb4891',
-  '68792c99a5ba8326e6eb4892',
-  '68792ca5a5ba8326e6eb4893',
+export const PREMADE_ROOM_CODES = [
+  'era-bxof-wzs',
+  'tgi-xoei-ixz',
+  'msx-kehx-nkr',
+  'spi-lbgt-exl',
+  'sgu-lssv-ulf',
+  'zcg-unsk-six',
+  'fyt-qnsi-tin',
+  'tvo-pelt-yrn',
+  'pxf-hcmw-xay',
+  'cix-qxvr-ddc',
+  'qlg-chaj-ljf',
+  'ikv-hcou-rft',
+  'dvl-ebnz-ujz',
+  'yck-vbks-eje',
+  'zma-uqap-uvs',
+  'nuc-rsrm-viq',
+  'xlt-zqoz-beu',
+  'pzx-gfjy-ugk',
+  'suj-huqf-gja',
+  'xrn-mxxa-xbh',
+  'ruj-equa-jse',
+  'yyy-sesw-pxw',
+  'odv-gpqr-kra',
+  'nte-mydn-pgp',
+  'azz-dwnc-nhz',
+  'pcf-vens-pki',
+  'xxm-rgun-qmx',
 ];
 
 import { collection, getDocs } from 'firebase/firestore';
 
-export const getUnusedRoomId = async (db) => {
-  // Get all groups and their roomIds
+export const getUnusedRoomCode = async (db) => {
+  // Get all groups and their roomCodes
   const groupsSnap = await getDocs(collection(db, "groups"));
-  const usedRoomIds = new Set();
+  const usedRoomCodes = new Set();
   groupsSnap.forEach(doc => {
     const data = doc.data();
-    if (data.roomId) usedRoomIds.add(data.roomId);
+    if (data.roomCode) usedRoomCodes.add(data.roomCode);
   });
-  // Find the first unused roomId
-  for (const id of PREMADE_ROOM_IDS) {
-    if (!usedRoomIds.has(id)) return id;
+  // Find the first unused roomCode
+  for (const code of PREMADE_ROOM_CODES) {
+    if (!usedRoomCodes.has(code)) return code;
   }
-  throw new Error('No unused room IDs available');
+  throw new Error('No unused room codes available');
 }; 
