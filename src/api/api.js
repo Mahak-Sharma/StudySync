@@ -175,7 +175,7 @@ export const sendGroupInvite = async (friendId, groupId) => {
 export const create100msRoom = async (groupName) => {
   const HMS_API_ENDPOINT = 'https://api.100ms.live/v2/rooms';
   const HMS_MANAGEMENT_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3NTI3NTg0OTAsImV4cCI6MTc1MzM2MzI5MCwianRpIjoiMTQ4ZjNiOWUtYmRiYi00MGU4LTkyZmMtMmFkOGUzNDM5ZDRmIiwidHlwZSI6Im1hbmFnZW1lbnQiLCJ2ZXJzaW9uIjoyLCJuYmYiOjE3NTI3NTg0OTAsImFjY2Vzc19rZXkiOiI2ODc3OGRiNWJkMGRhYjVmOWEwMTMwN2QifQ.gLXkSCaCmKnbnnOt0kKmaCHd99aIDxoB0xgjIYGxIyA';
-  const TEMPLATE_ID = 'REPLACE_WITH_YOUR_TEMPLATE_ID'; // TODO: Put your 100ms template id here
+  const TEMPLATE_ID = '68778e51033903926e6172e2'; // 100ms template id from user
 
   try {
     const res = await fetch(HMS_API_ENDPOINT, {
