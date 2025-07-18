@@ -13,8 +13,8 @@
     border-radius: 14px;
     box-shadow: 0 4px 16px rgba(45,108,223,0.18), 0 2px 8px rgba(0,0,0,0.10);
     z-index: 1999;
-    width: fit-content;
-    max-width: 260px;
+    width: 200px;
+    max-width: 200px;
     border: 2px solid #2d6cdf;
     font-family: 'Segoe UI', sans-serif;
     font-size: 18px;
@@ -25,14 +25,14 @@
 
 .chatbot-tooltip-title {
     margin: 0;
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 700;
     color: #2d6cdf;
 }
 
 .chatbot-tooltip-subtitle {
     margin: 4px 0 0 0;
-    font-size: 16px;
+    font-size: 12px;
     color: #555;
     font-weight: 500;
 }
@@ -40,10 +40,10 @@
 .chatbot-tooltip-close {
     position: absolute;
     top: 6px;
-    right: 8px;
+    right: 28px;
     background: none;
     border: none;
-    font-size: 18px;
+    font-size: 20px;
     color: #2d6cdf;
     cursor: pointer;
     line-height: 1;
