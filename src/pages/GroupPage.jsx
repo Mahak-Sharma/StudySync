@@ -1,12 +1,16 @@
 import './GroupPage.css';
 import GroupDashboard from "../components/Groups/GroupDashboard";
+import BackButton from '../components/BackButton';
 
 const GroupPage = () => (
-  <div className="group-page-container">
-    <div className="group-page-section">
-      <GroupDashboard />
+  <>
+    <BackButton />
+    <div className="group-page-container">
+      <div className="group-page-section">
+        <GroupDashboard />
+      </div>
     </div>
-  </div>
+  </>
 );
 
 export default GroupPage; 

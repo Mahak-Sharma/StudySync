@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import TodoItem from "./TodoItem";
 import { db } from '../../api/firebaseConfig';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import BackButton from '../BackButton';
 
 const TodoBoard = ({ groupId }) => {
   const [todos, setTodos] = useState([]);
@@ -68,30 +69,33 @@ const TodoBoard = ({ groupId }) => {
   };
 
   return (
-    <div className="todo-board-container">
-      <h3 className="todo-board-header">Todo List</h3>
-      {loading ? <div>Loading...</div> : (
-        <ul className="todo-board-list">
-          {todos.filter(todo => todo.status === 'pending').map(todo => (
-            <TodoItem
-              key={todo.id}
-              text={todo.text}
-              onRemove={() => handleComplete(todo.id)}
-            />
-          ))}
-        </ul>
-      )}
-      <form className="todo-board-form" onSubmit={handleAdd}>
-        <input
-          className="todo-board-input"
-          type="text"
-          placeholder="Add a new task..."
-          value={input}
-          onChange={e => setInput(e.target.value)}
-        />
-        <button className="todo-board-add" type="submit">Add</button>
-      </form>
-    </div>
+    <>
+      <BackButton />
+      <div className="todo-board-container">
+        <h3 className="todo-board-header">Todo List</h3>
+        {loading ? <div>Loading...</div> : (
+          <ul className="todo-board-list">
+            {todos.filter(todo => todo.status === 'pending').map(todo => (
+              <TodoItem
+                key={todo.id}
+                text={todo.text}
+                onRemove={() => handleComplete(todo.id)}
+              />
+            ))}
+          </ul>
+        )}
+        <form className="todo-board-form" onSubmit={handleAdd}>
+          <input
+            className="todo-board-input"
+            type="text"
+            placeholder="Add a new task..."
+            value={input}
+            onChange={e => setInput(e.target.value)}
+          />
+          <button className="todo-board-add" type="submit">Add</button>
+        </form>
+      </div>
+    </>
   );
 };
 

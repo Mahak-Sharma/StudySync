@@ -5,10 +5,12 @@ import FileList from '../components/Files/FileList';
 import TodoBoard from '../components/Todo/TodoBoard';
 import { fetchGroupSummaries, getFriends, fetchGroupMembers, sendGroupInvite } from '../api/api';
 import { db } from '../api/firebaseConfig';
-import { doc, getDoc, updateDoc, arrayRemove, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, arrayRemove, deleteDoc, arrayUnion } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { FaHome, FaTachometerAlt, FaComments, FaFileAlt, FaListAlt, FaBars, FaVideo } from 'react-icons/fa';
+import { FaHome, FaComments, FaFileAlt, FaListAlt, FaBars, FaVideo, FaUsers } from 'react-icons/fa';
+import { FaRegCopy } from 'react-icons/fa';
 import VideoCallRoom from '../components/VideoCallRoom';
+import BackButton from '../components/BackButton';
 
 const GroupDetailPage = () => {
   const { groupId } = useParams();
@@ -27,7 +29,7 @@ const GroupDetailPage = () => {
   const [deletingGroup, setDeletingGroup] = useState(false);
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
-  const [selectedSection, setSelectedSection] = useState('chat');
+  const [selectedSection, setSelectedSection] = useState('members'); // Default to members section
   const [fade, setFade] = useState(false);
   const [groupCallOpen, setGroupCallOpen] = useState(false);
 
@@ -177,84 +179,85 @@ const GroupDetailPage = () => {
   };
 
   return (
-    <div className="group-detail-flex-layout">
-      <div className={`group-side-panel${collapsed ? ' side-panel-collapsed' : ''}`}>
-        <button className="side-panel-toggle-btn" onClick={() => setCollapsed(c => !c)} title={collapsed ? 'Expand' : 'Collapse'}>
-          <FaBars />
-        </button>
-        <button className="side-panel-btn" onClick={() => navigate('/')}>
-          <span className="side-panel-icon"><FaHome /></span>
-          {!collapsed && <span className="side-panel-label">Home</span>}
-        </button>
-        <button className="side-panel-btn" onClick={() => navigate('/dashboard')}>
-          <span className="side-panel-icon"><FaTachometerAlt /></span>
-          {!collapsed && <span className="side-panel-label">Dashboard</span>}
-        </button>
-        <button className={`side-panel-btn${selectedSection === 'chat' ? ' active' : ''}`} onClick={() => handleSectionChange('chat')}>
-          <span className="side-panel-icon"><FaComments /></span>
-          {!collapsed && <span className="side-panel-label">Group Chat</span>}
-        </button>
-        <button className={`side-panel-btn${selectedSection === 'meeting' ? ' active' : ''}`} onClick={() => handleSectionChange('meeting')}>
-          <span className="side-panel-icon"><FaVideo /></span>
-          {!collapsed && <span className="side-panel-label">Meeting</span>}
-        </button>
-        <button className={`side-panel-btn${selectedSection === 'files' ? ' active' : ''}`} onClick={() => handleSectionChange('files')}>
-          <span className="side-panel-icon"><FaFileAlt /></span>
-          {!collapsed && <span className="side-panel-label">Files & Summarize</span>}
-        </button>
-        <button className={`side-panel-btn${selectedSection === 'todo' ? ' active' : ''}`} onClick={() => handleSectionChange('todo')}>
-          <span className="side-panel-icon"><FaListAlt /></span>
-          {!collapsed && <span className="side-panel-label">Todo List</span>}
-        </button>
-      </div>
-      <div className={`group-main-content${fade ? ' fade-out' : ''}`}>
-        {selectedSection === '' && (
-          <>
-            <h2 style={{ color: '#1976d2', fontWeight: 800, marginBottom: 24 }}>
-              {loadingGroupName ? 'Loading group...' : `Group: ${groupName}`}
-            </h2>
-            <div style={{ marginBottom: 32 }}>
-              <h3 style={{ color: '#1976d2', fontWeight: 700 }}>Group Members</h3>
-              {currentUser && creatorId === currentUser.uid && (
+    <>
+      <BackButton />
+      <div className="group-detail-flex-layout">
+        <div className={`group-side-panel${collapsed ? ' side-panel-collapsed' : ''}`}>
+          <button className="side-panel-toggle-btn" onClick={() => setCollapsed(c => !c)} title={collapsed ? 'Expand' : 'Collapse'}>
+            <FaBars />
+          </button>
+          <button className={`side-panel-btn${selectedSection === 'dashboard' ? ' active' : ''}`} onClick={() => navigate('/dashboard')}>
+            <span className="side-panel-icon"><FaHome /></span>
+            {!collapsed && <span className="side-panel-label">Home</span>}
+          </button>
+          <button className={`side-panel-btn${selectedSection === 'members' ? ' active' : ''}`} onClick={() => handleSectionChange('members')}>
+            <span className="side-panel-icon"><FaUsers /></span>
+            {!collapsed && <span className="side-panel-label">Members</span>}
+          </button>
+          <button className={`side-panel-btn${selectedSection === 'chat' ? ' active' : ''}`} onClick={() => handleSectionChange('chat')}>
+            <span className="side-panel-icon"><FaComments /></span>
+            {!collapsed && <span className="side-panel-label">Group Chat</span>}
+          </button>
+          <button className={`side-panel-btn${selectedSection === 'meeting' ? ' active' : ''}`} onClick={() => handleSectionChange('meeting')}>
+            <span className="side-panel-icon"><FaVideo /></span>
+            {!collapsed && <span className="side-panel-label">Meeting</span>}
+          </button>
+          <button className={`side-panel-btn${selectedSection === 'files' ? ' active' : ''}`} onClick={() => handleSectionChange('files')}>
+            <span className="side-panel-icon"><FaFileAlt /></span>
+            {!collapsed && <span className="side-panel-label">Files & Summarize</span>}
+          </button>
+          <button className={`side-panel-btn${selectedSection === 'todo' ? ' active' : ''}`} onClick={() => handleSectionChange('todo')}>
+            <span className="side-panel-icon"><FaListAlt /></span>
+            {!collapsed && <span className="side-panel-label">Todo List</span>}
+          </button>
+        </div>
+        <div className={`group-main-content${fade ? ' fade-out' : ''}`}>
+          {selectedSection === 'members' && (
+            <>
+              <h2 style={{ color: '#1976d2', fontWeight: 800, marginBottom: 12 }}>
+                {loadingGroupName ? 'Loading group...' : `Group: ${groupName}`}
+              </h2>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 18 }}>
+                <span style={{ fontWeight: 600, color: '#333', marginRight: 8 }}>Group ID:</span>
+                <span style={{ fontFamily: 'monospace', background: '#e3f0fc', padding: '2px 8px', borderRadius: 4, fontSize: 15 }}>{groupId}</span>
                 <button
-                  style={{ marginBottom: 12, marginLeft: 12, padding: '6px 16px', background: '#d32f2f', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}
-                  onClick={handleDeleteGroup}
-                  disabled={deletingGroup}
+                  style={{ marginLeft: 6, background: 'none', border: 'none', cursor: 'pointer', color: '#1976d2', fontSize: 20, padding: 2, display: 'flex', alignItems: 'center' }}
+                  title="Copy Group ID"
+                  onClick={() => {navigator.clipboard.writeText(groupId)}}
                 >
-                  {deletingGroup ? 'Deleting...' : 'Delete Group'}
+                  <FaRegCopy />
                 </button>
-              )}
-              <button
-                style={{ marginBottom: 12, padding: '6px 16px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}
-                onClick={() => setShowAddMembers(v => !v)}
-                disabled={!currentUser}
-              >
-                {showAddMembers ? 'Close' : 'Add Members'}
-              </button>
-              {showAddMembers && (
-                <div style={{ margin: '16px 0', padding: 16, background: '#f7f8fa', borderRadius: 8 }}>
-                  <h4 style={{ marginBottom: 8 }}>Invite Friends to Group</h4>
-                  {inviteMessage && <div style={{ color: 'green', marginBottom: 8 }}>{inviteMessage}</div>}
-                  {friendsNotInGroup.length === 0 ? (
-                    <div>No friends to invite.</div>
-                  ) : (
-                    <ul style={{ paddingLeft: 0 }}>
-                      {friendsNotInGroup.map(f => (
-                        <li key={f.id} style={{ listStyle: 'none', marginBottom: 8 }}>
-                          {f.name} (ID: {f.id})
-                          <button
-                            style={{ marginLeft: 12, padding: '4px 12px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}
-                            onClick={() => handleInvite(f.id)}
-                            disabled={inviting}
-                          >
-                            Invite
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              )}
+              </div>
+              {/* Add Member by User ID */}
+              <div style={{ marginBottom: 18, background: '#f7f8fa', padding: 16, borderRadius: 8, maxWidth: 400 }}>
+                <h4 style={{ marginBottom: 8 }}>Add Member by User ID</h4>
+                <AddMemberById groupId={groupId} setMembers={setMembers} />
+              </div>
+              {/* Invite Friends UI (existing) */}
+              <div style={{ marginBottom: 18, background: '#f7f8fa', padding: 16, borderRadius: 8, maxWidth: 400 }}>
+                <h4 style={{ marginBottom: 8 }}>Invite Friends to Group</h4>
+                {inviteMessage && <div style={{ color: 'green', marginBottom: 8 }}>{inviteMessage}</div>}
+                {friendsNotInGroup.length === 0 ? (
+                  <div>No friends to invite.</div>
+                ) : (
+                  <ul style={{ paddingLeft: 0 }}>
+                    {friendsNotInGroup.map(f => (
+                      <li key={f.id} style={{ listStyle: 'none', marginBottom: 8 }}>
+                        {f.name} (ID: {f.id})
+                        <button
+                          style={{ marginLeft: 12, padding: '4px 12px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}
+                          onClick={() => handleInvite(f.id)}
+                          disabled={inviting}
+                        >
+                          Invite
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              {/* Members List */}
+              <h3 style={{ color: '#1976d2', fontWeight: 700 }}>Group Members</h3>
               {loadingMembers ? (
                 <div>Loading members...</div>
               ) : members.length === 0 ? (
@@ -277,56 +280,117 @@ const GroupDetailPage = () => {
                   ))}
                 </ul>
               )}
-            </div>
-          </>
-        )}
-        {selectedSection === 'chat' && (
-          <>
+            </>
+          )}
+          {selectedSection === 'chat' && (
+            <>
+              <div style={{ marginBottom: 32 }}>
+                <h3 style={{ color: '#1976d2', fontWeight: 700 }}>Group Chat</h3>
+                <ChatBox groupId={groupId} />
+              </div>
+            </>
+          )}
+          {selectedSection === 'files' && (
+            <>
+              <div style={{ marginBottom: 32 }}>
+                <h3 style={{ color: '#1976d2', fontWeight: 700 }}>Files & Summarize</h3>
+                <FileList groupId={groupId} />
+              </div>
+              <div style={{ marginBottom: 32 }}>
+                <h3 style={{ color: '#1976d2', fontWeight: 700 }}>Summary History</h3>
+                {summaries.length === 0 ? (
+                  <div>No summaries yet.</div>
+                ) : (
+                  <ul style={{ paddingLeft: 0 }}>
+                    {summaries.map(s => (
+                      <li key={s.id} style={{ marginBottom: 16, listStyle: 'none', background: '#f7f8fa', padding: 12, borderRadius: 8 }}>
+                        <div><b>File:</b> {s.filename}</div>
+                        <div><b>Summary:</b> {s.summary}</div>
+                        <div style={{ fontSize: 12, color: '#888' }}><b>Time:</b> {new Date(s.timestamp).toLocaleString()}</div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </>
+          )}
+          {selectedSection === 'todo' && (
             <div style={{ marginBottom: 32 }}>
-              <h3 style={{ color: '#1976d2', fontWeight: 700 }}>Group Chat</h3>
-              <ChatBox groupId={groupId} />
+              <h3 style={{ color: '#1976d2', fontWeight: 700 }}>Todo List</h3>
+              <TodoBoard groupId={groupId} />
             </div>
-          </>
-        )}
-        {selectedSection === 'files' && (
-          <>
+          )}
+          {selectedSection === 'meeting' && (
             <div style={{ marginBottom: 32 }}>
-              <h3 style={{ color: '#1976d2', fontWeight: 700 }}>Files & Summarize</h3>
-              <FileList groupId={groupId} />
+              <h3 style={{ color: '#1976d2', fontWeight: 700, marginBottom: 24 }}>Group Meeting</h3>
+              <VideoCallRoom forceRoomId={groupId} />
             </div>
-            <div style={{ marginBottom: 32 }}>
-              <h3 style={{ color: '#1976d2', fontWeight: 700 }}>Summary History</h3>
-              {summaries.length === 0 ? (
-                <div>No summaries yet.</div>
-              ) : (
-                <ul style={{ paddingLeft: 0 }}>
-                  {summaries.map(s => (
-                    <li key={s.id} style={{ marginBottom: 16, listStyle: 'none', background: '#f7f8fa', padding: 12, borderRadius: 8 }}>
-                      <div><b>File:</b> {s.filename}</div>
-                      <div><b>Summary:</b> {s.summary}</div>
-                      <div style={{ fontSize: 12, color: '#888' }}><b>Time:</b> {new Date(s.timestamp).toLocaleString()}</div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </>
-        )}
-        {selectedSection === 'todo' && (
-          <div style={{ marginBottom: 32 }}>
-            <h3 style={{ color: '#1976d2', fontWeight: 700 }}>Todo List</h3>
-            <TodoBoard groupId={groupId} />
-          </div>
-        )}
-        {selectedSection === 'meeting' && (
-          <div style={{ marginBottom: 32 }}>
-            <h3 style={{ color: '#1976d2', fontWeight: 700, marginBottom: 24 }}>Group Meeting</h3>
-            <VideoCallRoom forceRoomId={groupId} />
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
-export default GroupDetailPage; 
+export default GroupDetailPage;
+
+// Add this helper component at the top-level (outside GroupDetailPage)
+function AddMemberById({ groupId, setMembers }) {
+  const [userId, setUserId] = React.useState("");
+  const [adding, setAdding] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const [success, setSuccess] = React.useState("");
+
+  const handleAdd = async () => {
+    setError("");
+    setSuccess("");
+    if (!userId.trim()) {
+      setError("Please enter a user ID.");
+      return;
+    }
+    setAdding(true);
+    try {
+      // Add userId to group members in Firestore
+      const groupRef = doc(db, 'groups', groupId);
+      await updateDoc(groupRef, { members: arrayUnion(userId.trim()) });
+      // Optionally, add group to user's groups array
+      const userRef = doc(db, 'users', userId.trim());
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const userGroups = userSnap.data().groups || [];
+        await updateDoc(userRef, { groups: arrayUnion({ id: groupId }) });
+      }
+      setSuccess("Member added!");
+      setUserId("");
+      // Optionally, refresh members list
+      if (typeof setMembers === 'function') {
+        setMembers(members => [...members, { uid: userId.trim(), displayName: null, email: null }]);
+      }
+    } catch (e) {
+      setError("Failed to add member. Make sure the user ID is correct.");
+    }
+    setAdding(false);
+  };
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <input
+        type="text"
+        placeholder="Enter User ID"
+        value={userId}
+        onChange={e => setUserId(e.target.value)}
+        style={{ padding: '6px 10px', borderRadius: 4, border: '1px solid #b0b0b0', fontSize: 15, minWidth: 160 }}
+        disabled={adding}
+      />
+      <button
+        onClick={handleAdd}
+        style={{ padding: '6px 16px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}
+        disabled={adding}
+      >
+        {adding ? 'Adding...' : 'Add'}
+      </button>
+      {error && <span style={{ color: 'red', marginLeft: 8 }}>{error}</span>}
+      {success && <span style={{ color: 'green', marginLeft: 8 }}>{success}</span>}
+    </div>
+  );
+} 

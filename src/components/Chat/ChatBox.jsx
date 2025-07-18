@@ -3,6 +3,7 @@ import './ChatBox.css';
 import { db } from '../../api/firebaseConfig';
 import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
+import BackButton from '../BackButton';
 
 const ChatBox = ({ groupId }) => {
   const { user } = useAuth();
@@ -69,32 +70,35 @@ const ChatBox = ({ groupId }) => {
   }
 
   return (
-    <div className="chat-box-container">
-      <h3 className="chat-box-title">Group Chat</h3>
-      <ul className="chat-box-messages">
-        {messages.map(msg => (
-          <li
-            className={`chat-box-message${msg.userId === user?.uid ? ' chat-box-message-right' : ' chat-box-message-left'}`}
-            key={msg.id}
-          >
-            <span className="chat-box-user"><b>{msg.userName}:</b></span>
-            <span>{msg.text}</span>
-          </li>
-        ))}
-        <div ref={messagesEndRef} />
-      </ul>
-      <hr className="chat-box-divider" />
-      <form className="chat-box-form" onSubmit={handleSend}>
-        <input
-          className="chat-box-input"
-          type="text"
-          placeholder="Type a message..."
-          value={input}
-          onChange={e => setInput(e.target.value)}
-        />
-        <button className="chat-box-send" type="submit">Send</button>
-      </form>
-    </div>
+    <>
+      <BackButton />
+      <div className="chat-box-container">
+        <h3 className="chat-box-title">Group Chat</h3>
+        <ul className="chat-box-messages">
+          {messages.map(msg => (
+            <li
+              className={`chat-box-message${msg.userId === user?.uid ? ' chat-box-message-right' : ' chat-box-message-left'}`}
+              key={msg.id}
+            >
+              <span className="chat-box-user"><b>{msg.userName}:</b></span>
+              <span>{msg.text}</span>
+            </li>
+          ))}
+          <div ref={messagesEndRef} />
+        </ul>
+        <hr className="chat-box-divider" />
+        <form className="chat-box-form" onSubmit={handleSend}>
+          <input
+            className="chat-box-input"
+            type="text"
+            placeholder="Type a message..."
+            value={input}
+            onChange={e => setInput(e.target.value)}
+          />
+          <button className="chat-box-send" type="submit">Send</button>
+        </form>
+      </div>
+    </>
   );
 };
 

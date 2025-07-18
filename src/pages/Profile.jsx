@@ -3,8 +3,9 @@ import { useAuth } from '../contexts/AuthContext';
 import React, { useEffect, useState } from 'react';
 import { db } from '../api/firebaseConfig';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { FaUser, FaSignOutAlt } from 'react-icons/fa';
+import { FaUser, FaSignOutAlt, FaRegCopy } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import BackButton from '../components/BackButton';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -37,6 +38,7 @@ const Profile = () => {
 
   return (
     <>
+      <BackButton />
       <div className="profile-bg" />
       {/* Floating Logout Button */}
       <motion.button
@@ -66,7 +68,15 @@ const Profile = () => {
           </div>
           <h2 className="profile-name">{user.displayName || 'No Name'}</h2>
           <div className="profile-email">{user.email}</div>
-          <div className="profile-uid">User ID: {user.uid}</div>
+          <div className="profile-uid">User ID: {user.uid}
+            <button
+              style={{ marginLeft: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#1976d2', fontSize: 18, verticalAlign: 'middle' }}
+              title="Copy User ID"
+              onClick={() => navigator.clipboard.writeText(user.uid)}
+            >
+              <FaRegCopy />
+            </button>
+          </div>
           {/* Floating Groups Card */}
           {createdGroups.length > 0 && (
             <motion.div
@@ -80,7 +90,16 @@ const Profile = () => {
                 {createdGroups.map(group => (
                   <li className="profile-groups-item" key={group.id}>
                     <span style={{ fontWeight: 600 }}>{group.name}</span>
-                    <span style={{ color: '#1976d2', fontSize: '0.95em', marginLeft: 8 }}>ID: {group.id}</span>
+                    <span style={{ color: '#1976d2', fontSize: '0.95em', marginLeft: 8 }}>
+                      ID: {group.id}
+                      <button
+                        style={{ marginLeft: 6, background: 'none', border: 'none', cursor: 'pointer', color: '#1976d2', fontSize: 16, verticalAlign: 'middle' }}
+                        title="Copy Group ID"
+                        onClick={() => navigator.clipboard.writeText(group.id)}
+                      >
+                        <FaRegCopy />
+                      </button>
+                    </span>
                   </li>
                 ))}
               </ul>

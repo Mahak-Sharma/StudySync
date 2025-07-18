@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { HMSPrebuilt } from "@100mslive/roomkit-react";
+import BackButton from '../components/BackButton';
 
 export default function MeetingPage() {
     const [roomCode, setRoomCode] = useState("");
@@ -15,7 +16,9 @@ export default function MeetingPage() {
     }
 
     return (
-        <div style={{ padding: 40 }}>
+        <>
+          <BackButton />
+          <div style={{ padding: 40 }}>
             <h2>Group Meeting Join Karo</h2>
             <input
                 type="text"
@@ -36,6 +39,7 @@ export default function MeetingPage() {
             <button onClick={() => setJoin(true)} style={{ margin: 8 }}>
                 Join Meeting
             </button>
-        </div>
+          </div>
+        </>
     );
 } 

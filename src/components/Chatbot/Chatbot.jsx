@@ -4,6 +4,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import chatbotData from "./chatbotData.json";
 import roboIcon from "./robot.png";
 import sendIcon from "./send-icon.png";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Chatbot = () => {
   // Get API key from environment variable or use a placeholder
@@ -33,6 +34,7 @@ Be friendly, helpful, and concise in your responses. If you don't know something
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [apiDisabled, setApiDisabled] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(true);
 
   const chatRef = useRef();
 
@@ -151,19 +153,52 @@ Be friendly, helpful, and concise in your responses. If you don't know something
     setLoading(false);
   };
 
-  const toggleChatbot = () => setChatOpen((prev) => !prev);
+  const toggleChatbot = () => {
+    setChatOpen((prev) => !prev);
+    setShowTooltip(false); // Hide tooltip when chatbot is opened
+  };
   
   return (
     <>
-      {!chatOpen && (
-        <div className="chatbot-tooltip">
-          <p className="chatbot-tooltip-title">Hello! any questions?</p>
-          <p className="chatbot-tooltip-subtitle">HelpBot</p>
-        </div>
-      )}
-      <button onClick={toggleChatbot} className="chatbot-toggle-button">
+
+      <AnimatePresence>
+        {!chatOpen && showTooltip && (
+          <motion.div
+            className="chatbot-tooltip"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.5 }}
+            style={{ position: 'fixed', bottom: 100, right: 30, zIndex: 1999 }}
+          >
+            <button
+              className="chatbot-tooltip-close"
+              style={{ position: 'absolute', top: 6, right: 8, background: 'none', border: 'none', fontSize: 18, color: '#2d6cdf', cursor: 'pointer', lineHeight: 1 }}
+              title="Close"
+              onClick={() => setShowTooltip(false)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <p className="chatbot-tooltip-title">Hello! any questions?</p>
+            <p className="chatbot-tooltip-subtitle">HelpBot</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.button
+        onClick={toggleChatbot}
+        className="chatbot-toggle-button"
+        initial={{ opacity: 0, scale: 0.7, y: 40 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.6, type: 'spring', bounce: 0.3 }}
+        whileHover={{ scale: 1.15, boxShadow: '0 0 0 8px #2d6cdf33' }}
+        whileTap={{ scale: 0.93 }}
+        style={{ outline: 'none' }}
+        aria-label="Open Chatbot"
+      >
         <img src={roboIcon} alt="Open Chatbot" />
-      </button>
+      </motion.button>
 
       {chatOpen && (
         <div className="chatbot-wrapper">
