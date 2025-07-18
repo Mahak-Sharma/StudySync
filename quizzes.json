@@ -1,0 +1,36 @@
+{
+  "quizzes": [
+    {
+      "group_id": "BG0syA8zC4QzmgWAjJQK",
+      "title": "TEST",
+      "questions": [
+        {
+          "question": "Year",
+          "options": [
+            "2001",
+            "2016",
+            "2025",
+            "2026"
+          ],
+          "answer": 2
+        }
+      ],
+      "timer": "10",
+      "status": "started",
+      "created_by": "64S2rM9XFRZtNesIWdxvUxwyBO43",
+      "start_time": "2025-07-18T14:56:44.551042Z",
+      "id": 1
+    }
+  ],
+  "submissions": [
+    {
+      "quiz_id": 1,
+      "user_id": "64S2rM9XFRZtNesIWdxvUxwyBO43",
+      "answers": [
+        2
+      ],
+      "score": 1,
+      "submitted_at": "2025-07-18T14:56:57.934554Z"
+    }
+  ]
+}

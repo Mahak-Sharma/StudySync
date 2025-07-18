@@ -231,28 +231,53 @@ export const getUnusedRoomCode = async (db) => {
   throw new Error('No unused room codes available');
 };
 
-// Quiz Feature API Calls (placeholders)
+// Quiz Feature API Calls
+const QUIZ_API_BASE = 'http://localhost:5002';
+
 export const createQuiz = async (groupId, quizData) => {
-  // TODO: Implement quiz creation (Firestore or backend)
-  return { success: true, quizId: 'placeholder' };
+  const res = await fetch(`${QUIZ_API_BASE}/quiz/create`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...quizData, group_id: groupId }),
+  });
+  return await res.json();
 };
 
 export const fetchQuizzes = async (groupId) => {
-  // TODO: Implement fetch quizzes for a group
-  return [];
+  const res = await fetch(`${QUIZ_API_BASE}/quiz/list?group_id=${encodeURIComponent(groupId)}`);
+  const data = await res.json();
+  return data.quizzes || [];
 };
 
 export const startQuiz = async (quizId) => {
-  // TODO: Implement quiz start logic (real-time trigger)
-  return { success: true };
+  const res = await fetch(`${QUIZ_API_BASE}/quiz/start`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ quiz_id: quizId }),
+  });
+  return await res.json();
 };
 
 export const submitQuizAnswers = async (quizId, userId, answers) => {
-  // TODO: Implement answer submission
-  return { success: true };
+  const res = await fetch(`${QUIZ_API_BASE}/quiz/submit`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ quiz_id: quizId, user_id: userId, answers }),
+  });
+  return await res.json();
 };
 
 export const fetchQuizLeaderboard = async (quizId) => {
-  // TODO: Implement leaderboard fetch
-  return [];
+  const res = await fetch(`${QUIZ_API_BASE}/quiz/leaderboard?quiz_id=${quizId}`);
+  const data = await res.json();
+  return data.leaderboard || [];
+};
+
+export const deleteQuiz = async (quizId) => {
+  const res = await fetch(`${QUIZ_API_BASE}/quiz/delete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ quiz_id: quizId }),
+  });
+  return await res.json();
 }; 
