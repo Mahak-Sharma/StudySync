@@ -229,4 +229,30 @@ export const getUnusedRoomCode = async (db) => {
     if (!usedRoomCodes.has(code)) return code;
   }
   throw new Error('No unused room codes available');
+};
+
+// Quiz Feature API Calls (placeholders)
+export const createQuiz = async (groupId, quizData) => {
+  // TODO: Implement quiz creation (Firestore or backend)
+  return { success: true, quizId: 'placeholder' };
+};
+
+export const fetchQuizzes = async (groupId) => {
+  // TODO: Implement fetch quizzes for a group
+  return [];
+};
+
+export const startQuiz = async (quizId) => {
+  // TODO: Implement quiz start logic (real-time trigger)
+  return { success: true };
+};
+
+export const submitQuizAnswers = async (quizId, userId, answers) => {
+  // TODO: Implement answer submission
+  return { success: true };
+};
+
+export const fetchQuizLeaderboard = async (quizId) => {
+  // TODO: Implement leaderboard fetch
+  return [];
 }; 

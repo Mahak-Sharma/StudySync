@@ -96,12 +96,21 @@ const GroupDashboard = () => {
               <span style={{ color: '#1976d2', fontWeight: 600 }} onClick={() => navigate(`/group/${group.id}`)}>
                 {group.name}
               </span>
-              <button
-                className="group-dashboard-meeting-btn"
-                onClick={() => setMeetingGroupId(group.id)}
-              >
-                Meeting
-              </button>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  className="group-dashboard-meeting-btn"
+                  onClick={() => setMeetingGroupId(group.id)}
+                >
+                  Meeting
+                </button>
+                <button
+                  className="group-dashboard-quiz-btn"
+                  onClick={() => navigate(`/group/${group.id}?section=quiz`)}
+                  style={{ background: '#ffb300', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontWeight: 600, cursor: 'pointer' }}
+                >
+                  Quiz
+                </button>
+              </div>
             </li>
           ))}
         </ul>

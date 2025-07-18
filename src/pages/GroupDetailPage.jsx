@@ -11,6 +11,7 @@ import { FaHome, FaComments, FaFileAlt, FaListAlt, FaBars, FaVideo, FaUsers } fr
 import { FaRegCopy } from 'react-icons/fa';
 import VideoCallRoom from '../components/VideoCallRoom';
 import BackButton from '../components/BackButton';
+import QuizMain from '../components/Quiz/QuizMain'; // Placeholder for the main quiz component
 
 const GroupDetailPage = () => {
   const { groupId } = useParams();
@@ -210,6 +211,10 @@ const GroupDetailPage = () => {
             <span className="side-panel-icon"><FaListAlt /></span>
             {!collapsed && <span className="side-panel-label">Todo List</span>}
           </button>
+          <button className={`side-panel-btn${selectedSection === 'quiz' ? ' active' : ''}`} onClick={() => handleSectionChange('quiz')}>
+            <span className="side-panel-icon">📝</span>
+            {!collapsed && <span className="side-panel-label">Quiz</span>}
+          </button>
         </div>
         <div className={`group-main-content${fade ? ' fade-out' : ''}`}>
           {selectedSection === 'members' && (
@@ -324,6 +329,12 @@ const GroupDetailPage = () => {
             <div style={{ marginBottom: 32 }}>
               <h3 style={{ color: '#1976d2', fontWeight: 700, marginBottom: 24 }}>Group Meeting</h3>
               <VideoCallRoom forceRoomId={groupId} />
+            </div>
+          )}
+          {selectedSection === 'quiz' && (
+            <div style={{ marginBottom: 32 }}>
+              <h3 style={{ color: '#1976d2', fontWeight: 700 }}>Group Quizzes</h3>
+              <QuizMain groupId={groupId} />
             </div>
           )}
         </div>

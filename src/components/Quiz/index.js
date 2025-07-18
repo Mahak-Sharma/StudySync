@@ -1,0 +1,1 @@
+export { default as QuizMain } from './QuizMain'; 

@@ -17,6 +17,7 @@ const GroupList = () => (
         </li>
       ))}
     </ul>
+    {/* Placeholder for future quiz status or quick access */}
   </div>
 );
 

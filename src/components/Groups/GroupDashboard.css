@@ -149,3 +149,17 @@
   box-shadow: 0 6px 24px rgba(25, 118, 210, 0.18);
 } 
  
+.group-dashboard-quiz-btn {
+  background: #ffb300;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.group-dashboard-quiz-btn:hover, .group-dashboard-quiz-btn:focus {
+  background: #ffa000;
+} 
+ 
