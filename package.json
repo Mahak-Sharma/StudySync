@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@100mslive/react-sdk": "^0.10.35",
-    "@100mslive/roomkit-react": "^0.3.35",
+    "@100mslive/roomkit-react": "^0.3.9",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@google/generative-ai": "^0.24.1",
