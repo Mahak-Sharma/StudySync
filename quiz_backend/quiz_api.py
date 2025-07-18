@@ -7,6 +7,10 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:5173", "https://studysync-3435a.web.app"])
 
+@app.route('/')
+def health():
+    return 'Quiz backend is running!', 200
+
 @app.route('/quiz/create', methods=['POST'])
 def create_quiz():
     data = request.json
@@ -92,4 +96,4 @@ def delete_quiz_api():
 
 if __name__ == '__main__':
     port = int(os.environ.get("QUIZ_PORT", 5002))
-    app.run(debug=True, host="0.0.0.0", port=port) 
+    app.run(host="0.0.0.0", port=port) 

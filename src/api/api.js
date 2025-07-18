@@ -232,7 +232,7 @@ export const getUnusedRoomCode = async (db) => {
 };
 
 // Quiz Feature API Calls
-const QUIZ_API_BASE = 'http://localhost:5002';
+const QUIZ_API_BASE = 'https://studysync-quiz-backend.onrender.com';
 
 export const createQuiz = async (groupId, quizData) => {
   const res = await fetch(`${QUIZ_API_BASE}/quiz/create`, {
